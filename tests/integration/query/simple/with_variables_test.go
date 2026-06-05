@@ -248,3 +248,79 @@ func TestQuerySimpleWithAggregateCountVariable(t *testing.T) {
 
 	executeTestCase(t, test)
 }
+
+func TestQuerySimpleWithFloatVariable(t *testing.T) {
+	test := testUtils.TestCase{
+		Actions: []any{
+			&action.AddDoc{
+				Doc: `{
+					"Name": "John",
+					"HeightM": 2.1
+				}`,
+			},
+			&action.AddDoc{
+				Doc: `{
+					"Name": "Bob",
+					"HeightM": 1.82
+				}`,
+			},
+			&action.Request{
+				Variables: immutable.Some(map[string]any{
+					"minHeight": float64(2.0),
+				}),
+				Request: `query($minHeight: Float) {
+					Users(filter: {HeightM: {_geq: $minHeight}}) {
+						Name
+					}
+				}`,
+				Results: map[string]any{
+					"Users": []map[string]any{
+						{
+							"Name": "John",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	executeTestCase(t, test)
+}
+
+func TestQuerySimpleWithNonNullFloatVariable(t *testing.T) {
+	test := testUtils.TestCase{
+		Actions: []any{
+			&action.AddDoc{
+				Doc: `{
+					"Name": "John",
+					"HeightM": 2.1
+				}`,
+			},
+			&action.AddDoc{
+				Doc: `{
+					"Name": "Bob",
+					"HeightM": 1.82
+				}`,
+			},
+			&action.Request{
+				Variables: immutable.Some(map[string]any{
+					"minHeight": float64(2.0),
+				}),
+				Request: `query($minHeight: Float!) {
+					Users(filter: {HeightM: {_geq: $minHeight}}) {
+						Name
+					}
+				}`,
+				Results: map[string]any{
+					"Users": []map[string]any{
+						{
+							"Name": "John",
+						},
+					},
+				},
+			},
+		},
+	}
+
+	executeTestCase(t, test)
+}
