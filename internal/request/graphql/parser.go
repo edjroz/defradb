@@ -119,7 +119,7 @@ func (p *parser) Parse(ctx context.Context, ast *ast.Document, options *client.G
 		}
 	}
 
-	normalizeFloatVariableTypes(ast)
+	normalizeVariableTypes(ast)
 	validationResult := gql.ValidateDocument(schema, ast, nil)
 	if !validationResult.IsValid {
 		errors := make([]error, len(validationResult.Errors))
@@ -184,31 +184,31 @@ func (p *parser) SetSchema(ctx context.Context, collections []client.CollectionV
 	return err
 }
 
-// normalizeFloatVariableTypes replaces Float variable type references with Float64.
-// Float is a schema alias for Float64 but the GraphQL validator treats them as distinct
-// named types, so $var: Float fails when the field expects Float64.
-func normalizeFloatVariableTypes(doc *ast.Document) {
+// normalizeVariableTypes rewrites any user-facing type alias in variable declarations
+// to its canonical name before the validator runs, so aliases like Float (→ Float64)
+// are accepted wherever the canonical type is expected.
+func normalizeVariableTypes(doc *ast.Document) {
 	for _, def := range doc.Definitions {
 		op, ok := def.(*ast.OperationDefinition)
 		if !ok {
 			continue
 		}
 		for _, varDef := range op.VariableDefinitions {
-			normalizeFloatType(varDef.Type)
+			normalizeType(varDef.Type)
 		}
 	}
 }
 
-func normalizeFloatType(t ast.Type) {
+func normalizeType(t ast.Type) {
 	switch t := t.(type) {
 	case *ast.Named:
 		if canonical, ok := schema.TypeAliases[t.Name.Value]; ok {
 			t.Name.Value = canonical
 		}
 	case *ast.List:
-		normalizeFloatType(t.Type)
+		normalizeType(t.Type)
 	case *ast.NonNull:
-		normalizeFloatType(t.Type)
+		normalizeType(t.Type)
 	}
 }
 
