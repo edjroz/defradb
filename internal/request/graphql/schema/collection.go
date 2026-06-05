@@ -57,6 +57,12 @@ var TypeToDefaultPropName = map[string]string{
 	typeBlob:     types.DefaultDirectivePropBlob,
 }
 
+// TypeAliases maps user-facing SDL type names to their canonical GQL scalar names.
+// These aliases are accepted in both schema definitions and query variable declarations.
+var TypeAliases = map[string]string{
+	typeFloat: typeFloat64,
+}
+
 type typeDefinition struct {
 	Name        *ast.Name
 	Description *ast.StringValue
