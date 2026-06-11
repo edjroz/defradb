@@ -46,6 +46,25 @@ func forwardWifiAwareEvents(bus event.Bus, events <-chan wifiaware.Event) {
 	}
 }
 
+// wifiAwareEventSource is satisfied by *p2p.Peer when Wi-Fi Aware is enabled.
+type wifiAwareEventSource interface {
+	WifiAwareEvents() <-chan wifiaware.Event
+}
+
+// startWifiAwareForwarding spawns the discovery event forwarder. Must be
+// called after the DB (and its event bus) is available.
+func (n *Node) startWifiAwareForwarding() {
+	src, ok := n.peer.(wifiAwareEventSource)
+	if !ok || src.WifiAwareEvents() == nil {
+		return
+	}
+	n.wifiAwareDone = make(chan struct{})
+	go func() {
+		defer close(n.wifiAwareDone)
+		forwardWifiAwareEvents(n.DB.Events(), src.WifiAwareEvents())
+	}()
+}
+
 // buildP2POpts translates node P2P options into go-p2p node options.
 func buildP2POpts(opts *options.NodeP2POptions) []p2p.NodeOpt {
 	var p2pOpts []p2p.NodeOpt

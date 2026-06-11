@@ -68,6 +68,10 @@ type Node struct {
 	// shutdown path rather than leaving a half-alive process for the user
 	// to SIGKILL. Buffered so startAPI never blocks on a missing reader.
 	apiErrCh chan error
+	// wifiAwareDone closes when the wifi-aware event forwarder exits, nil
+	// when wifi-aware is disabled. Close waits on it so the forwarder's
+	// final status event lands before the event bus shuts down.
+	wifiAwareDone chan struct{}
 }
 
 // APIError returns a buffered, never-closed channel that receives at most one
@@ -172,6 +176,8 @@ func (n *Node) Start(ctx context.Context) error {
 		return err
 	}
 
+	n.startWifiAwareForwarding()
+
 	return n.startAPI(ctx)
 }
 
@@ -183,6 +189,12 @@ func (n *Node) Close(ctx context.Context) error {
 	}
 	if n.peer != nil {
 		n.peer.Close()
+	}
+	if n.wifiAwareDone != nil {
+		// Closing the peer ends the discovery event stream; wait for the
+		// forwarder to publish its final status before closing the bus.
+		<-n.wifiAwareDone
+		n.wifiAwareDone = nil
 	}
 	if n.DB != nil {
 		n.DB.Close()

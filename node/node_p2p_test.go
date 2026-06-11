@@ -149,19 +149,24 @@ func TestNode_Start_WithWifiAware_ForwardsEvents(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, n.Start(ctx))
 
-	// The initial Running:true status fires inside Start, before a caller can
-	// subscribe; its delivery is covered by the forwarder unit tests. Here we
-	// assert the end of the lifecycle: closing the node must terminate the
-	// forwarder, which publishes Running:false before the bus shuts down.
+	// Whether the subscriber catches the initial Running:true depends on
+	// goroutine scheduling (covered deterministically by the forwarder unit
+	// tests). The lifecycle guarantee asserted here is the terminal state:
+	// closing the node terminates the forwarder, which publishes
+	// Running:false before the bus shuts down.
 	sub, err := n.DB.Events().Subscribe(event.WifiAwareStatusName)
 	require.NoError(t, err)
 
 	require.NoError(t, n.Close(ctx))
 
-	msg := receiveMessage(t, sub)
-	status, ok := msg.Data.(event.WifiAwareStatus)
-	require.True(t, ok, "expected WifiAwareStatus payload, got %T", msg.Data)
-	assert.False(t, status.Running)
+	for {
+		msg := receiveMessage(t, sub)
+		status, ok := msg.Data.(event.WifiAwareStatus)
+		require.True(t, ok, "expected WifiAwareStatus payload, got %T", msg.Data)
+		if !status.Running {
+			return
+		}
+	}
 }
 
 func TestBuildP2POpts_WifiAwareDisabledByDefault(t *testing.T) {

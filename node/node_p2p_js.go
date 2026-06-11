@@ -23,3 +23,6 @@ func (n *Node) startP2P(ctx context.Context, store corekv.ReaderWriter, chunkSiz
 	}
 	return ErrP2PNotSupported
 }
+
+// startWifiAwareForwarding is a no-op in JS builds, which have no P2P stack.
+func (n *Node) startWifiAwareForwarding() {}
