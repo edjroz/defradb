@@ -28,8 +28,11 @@ import (
 )
 
 // forwardWifiAwareEvents republishes Wi-Fi Aware discovery events onto the
-// DefraDB event bus, returning when the source channel closes.
+// DefraDB event bus, returning when the source channel closes. Status events
+// bracket the stream: Running true on entry, false on exit.
 func forwardWifiAwareEvents(bus event.Bus, events <-chan wifiaware.Event) {
+	bus.Publish(event.NewMessage(event.WifiAwareStatusName, event.WifiAwareStatus{Running: true}))
+	defer bus.Publish(event.NewMessage(event.WifiAwareStatusName, event.WifiAwareStatus{Running: false}))
 	for ev := range events {
 		addrs := make([]string, len(ev.Peer.Addrs))
 		for i, addr := range ev.Peer.Addrs {
