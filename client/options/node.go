@@ -107,6 +107,8 @@ type NodeP2POptions struct {
 	EnableRelay bool
 	// EnableClearBackoffOnRetry enables clearing backoff on retry for connections.
 	EnableClearBackoffOnRetry bool
+	// EnableWifiAware enables Wi-Fi Aware local mesh peer discovery.
+	EnableWifiAware bool
 	// PrivateKey is the private key for the P2P node.
 	PrivateKey []byte
 }
@@ -495,6 +497,12 @@ func (sb *NodeP2POptionsBuilder) SetEnableRelay(enable bool) *NodeP2POptionsBuil
 // SetEnableClearBackoffOnRetry sets whether to clear backoff on retry.
 func (sb *NodeP2POptionsBuilder) SetEnableClearBackoffOnRetry(enable bool) *NodeP2POptionsBuilder {
 	sb.append(func(opts *NodeP2POptions) { opts.EnableClearBackoffOnRetry = enable })
+	return sb
+}
+
+// SetEnableWifiAware sets whether Wi-Fi Aware local mesh discovery is enabled.
+func (sb *NodeP2POptionsBuilder) SetEnableWifiAware(enable bool) *NodeP2POptionsBuilder {
+	sb.append(func(opts *NodeP2POptions) { opts.EnableWifiAware = enable })
 	return sb
 }
 
