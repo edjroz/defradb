@@ -33,3 +33,8 @@ func TestSetEnableDevelopment(t *testing.T) {
 	opts := utils.NewOptions(options.Node().SetEnableDevelopment(true))
 	assert.Equal(t, true, opts.EnableDevelopment)
 }
+
+func TestSetEnableWifiAware(t *testing.T) {
+	opts := utils.NewOptions(options.Node().P2P().SetEnableWifiAware(true).Node())
+	assert.Equal(t, true, opts.P2P.EnableWifiAware)
+}
