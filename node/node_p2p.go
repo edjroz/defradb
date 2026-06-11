@@ -44,6 +44,9 @@ func buildP2POpts(opts *options.NodeP2POptions) []p2p.NodeOpt {
 	if len(opts.PrivateKey) > 0 {
 		p2pOpts = append(p2pOpts, p2p.WithPrivateKey(opts.PrivateKey))
 	}
+	if opts.EnableWifiAware {
+		p2pOpts = append(p2pOpts, p2p.WithEnableWifiAware(true))
+	}
 	return p2pOpts
 }
 
