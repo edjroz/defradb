@@ -80,6 +80,59 @@ func TestForwardWifiAwareEvents_PublishesPeerFound(t *testing.T) {
 	<-done
 }
 
+func TestForwardWifiAwareEvents_PublishesStatusOnStartAndClose(t *testing.T) {
+	bus := event.NewChannelBus(16, 16)
+	defer bus.Close()
+	sub, err := bus.Subscribe(event.WifiAwareStatusName)
+	require.NoError(t, err)
+
+	events := make(chan wifiaware.Event)
+	done := make(chan struct{})
+	go func() {
+		forwardWifiAwareEvents(bus, events)
+		close(done)
+	}()
+
+	msg := receiveMessage(t, sub)
+	status, ok := msg.Data.(event.WifiAwareStatus)
+	require.True(t, ok, "expected WifiAwareStatus payload, got %T", msg.Data)
+	assert.True(t, status.Running)
+
+	close(events)
+	msg = receiveMessage(t, sub)
+	status, ok = msg.Data.(event.WifiAwareStatus)
+	require.True(t, ok, "expected WifiAwareStatus payload, got %T", msg.Data)
+	assert.False(t, status.Running)
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Fatal("forwarder did not exit after source channel closed")
+	}
+}
+
+func TestForwardWifiAwareEvents_PublishesPeerLost(t *testing.T) {
+	bus := event.NewChannelBus(16, 16)
+	defer bus.Close()
+	sub, err := bus.Subscribe(event.WifiAwarePeerName)
+	require.NoError(t, err)
+
+	events := make(chan wifiaware.Event, 1)
+	go forwardWifiAwareEvents(bus, events)
+
+	events <- wifiaware.Event{
+		Type: wifiaware.PeerLost,
+		Peer: peer.AddrInfo{ID: peer.ID("peer-x")},
+	}
+
+	msg := receiveMessage(t, sub)
+	data, ok := msg.Data.(event.WifiAwarePeer)
+	require.True(t, ok, "expected WifiAwarePeer payload, got %T", msg.Data)
+	assert.Equal(t, "LOST", data.EventType)
+
+	close(events)
+}
+
 func TestBuildP2POpts_WifiAwareDisabledByDefault(t *testing.T) {
 	opts := options.NodeP2POptions{}
 
