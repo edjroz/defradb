@@ -292,6 +292,13 @@ func MakeStartCommand(ctx context.Context) *cobra.Command {
 		cfg.GetBool(config.ConfigFlags["relay"]),
 		"Enable the p2p relay",
 	)
+	cmd.PersistentFlags().Bool(
+		"enable-wifi-aware",
+		cfg.GetBool(config.ConfigFlags["enable-wifi-aware"]),
+		"Enable Wi-Fi Aware local mesh peer discovery (mDNS-backed); nodes on the "+
+			"same network find and connect to each other automatically. Requires a "+
+			"non-loopback p2paddr, e.g. /ip4/0.0.0.0/tcp/9171",
+	)
 	cmd.PersistentFlags().StringArray(
 		"allowed-origins",
 		cfg.GetStringSlice(config.ConfigFlags["allowed-origins"]),
