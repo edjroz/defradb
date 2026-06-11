@@ -66,6 +66,10 @@ const (
 	PurgeName = Name("purge")
 	// TopicPeerEventName is the name of the topic peer join/leave event.
 	TopicPeerEventName = Name("topic-peer-event")
+	// WifiAwarePeerName is the name of the Wi-Fi Aware peer found/lost event.
+	WifiAwarePeerName = Name("wifi-aware-peer")
+	// WifiAwareStatusName is the name of the Wi-Fi Aware discovery start/stop event.
+	WifiAwareStatusName = Name("wifi-aware-status")
 )
 
 // PubSub is an event that is published when
@@ -172,6 +176,24 @@ type ReplicatorFailure struct {
 	PeerID peer.ID
 	// DocID is the unique immutable identifier of the document that failed to replicate.
 	DocID string
+}
+
+// WifiAwarePeer is an event that is published when a peer is found or lost
+// via Wi-Fi Aware local mesh discovery.
+type WifiAwarePeer struct {
+	// PeerID is the id of the discovered peer.
+	PeerID string
+	// Addresses are the peer's dialable multiaddresses.
+	Addresses []string
+	// EventType is the type of event: "FOUND" or "LOST".
+	EventType string
+}
+
+// WifiAwareStatus is an event that is published when Wi-Fi Aware discovery
+// starts or stops.
+type WifiAwareStatus struct {
+	// Running is true while the discovery service is active.
+	Running bool
 }
 
 // TopicPeerEvent is an event that is published when a peer joins or leaves a pubsub topic.

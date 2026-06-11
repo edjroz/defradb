@@ -19,11 +19,29 @@ import (
 
 	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/go-p2p"
+	"github.com/sourcenetwork/go-p2p/wifiaware"
 	"github.com/sourcenetwork/immutable"
 
 	"github.com/sourcenetwork/defradb/client/options"
+	"github.com/sourcenetwork/defradb/event"
 	"github.com/sourcenetwork/defradb/internal/datastore"
 )
+
+// forwardWifiAwareEvents republishes Wi-Fi Aware discovery events onto the
+// DefraDB event bus, returning when the source channel closes.
+func forwardWifiAwareEvents(bus event.Bus, events <-chan wifiaware.Event) {
+	for ev := range events {
+		addrs := make([]string, len(ev.Peer.Addrs))
+		for i, addr := range ev.Peer.Addrs {
+			addrs[i] = addr.String()
+		}
+		bus.Publish(event.NewMessage(event.WifiAwarePeerName, event.WifiAwarePeer{
+			PeerID:    ev.Peer.ID.String(),
+			Addresses: addrs,
+			EventType: string(ev.Type),
+		}))
+	}
+}
 
 // buildP2POpts translates node P2P options into go-p2p node options.
 func buildP2POpts(opts *options.NodeP2POptions) []p2p.NodeOpt {
