@@ -21,31 +21,38 @@ import (
 	"github.com/sourcenetwork/go-p2p"
 	"github.com/sourcenetwork/immutable"
 
+	"github.com/sourcenetwork/defradb/client/options"
 	"github.com/sourcenetwork/defradb/internal/datastore"
 )
+
+// buildP2POpts translates node P2P options into go-p2p node options.
+func buildP2POpts(opts *options.NodeP2POptions) []p2p.NodeOpt {
+	var p2pOpts []p2p.NodeOpt
+	if len(opts.ListenAddresses) > 0 {
+		p2pOpts = append(p2pOpts, p2p.WithListenAddresses(opts.ListenAddresses...))
+	}
+	if len(opts.BootstrapPeers) > 0 {
+		p2pOpts = append(p2pOpts, p2p.WithBootstrapPeers(opts.BootstrapPeers...))
+	}
+	p2pOpts = append(p2pOpts, p2p.WithEnablePubSub(opts.EnablePubSub))
+	if opts.EnableRelay {
+		p2pOpts = append(p2pOpts, p2p.WithEnableRelay(true))
+	}
+	if opts.EnableClearBackoffOnRetry {
+		p2pOpts = append(p2pOpts, p2p.WithClearBackoffOnRetry(true))
+	}
+	if len(opts.PrivateKey) > 0 {
+		p2pOpts = append(p2pOpts, p2p.WithPrivateKey(opts.PrivateKey))
+	}
+	return p2pOpts
+}
 
 func (n *Node) startP2P(ctx context.Context, store corekv.ReaderWriter, chunkSize immutable.Option[int]) error {
 	if n.opts.DisableP2P {
 		return nil
 	}
 
-	var p2pOpts []p2p.NodeOpt
-	if len(n.opts.P2P.ListenAddresses) > 0 {
-		p2pOpts = append(p2pOpts, p2p.WithListenAddresses(n.opts.P2P.ListenAddresses...))
-	}
-	if len(n.opts.P2P.BootstrapPeers) > 0 {
-		p2pOpts = append(p2pOpts, p2p.WithBootstrapPeers(n.opts.P2P.BootstrapPeers...))
-	}
-	p2pOpts = append(p2pOpts, p2p.WithEnablePubSub(n.opts.P2P.EnablePubSub))
-	if n.opts.P2P.EnableRelay {
-		p2pOpts = append(p2pOpts, p2p.WithEnableRelay(true))
-	}
-	if n.opts.P2P.EnableClearBackoffOnRetry {
-		p2pOpts = append(p2pOpts, p2p.WithClearBackoffOnRetry(true))
-	}
-	if len(n.opts.P2P.PrivateKey) > 0 {
-		p2pOpts = append(p2pOpts, p2p.WithPrivateKey(n.opts.P2P.PrivateKey))
-	}
+	p2pOpts := buildP2POpts(&n.opts.P2P)
 	p2pOpts = append(p2pOpts, p2p.WithBlockstore(datastore.P2PBlockstoreFrom(store, chunkSize)))
 
 	peer, err := p2p.NewPeer(ctx, p2pOpts...)
