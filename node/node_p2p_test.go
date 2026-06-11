@@ -14,6 +14,8 @@ package node
 
 import (
 	"context"
+	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -167,6 +169,57 @@ func TestNode_Start_WithWifiAware_ForwardsEvents(t *testing.T) {
 			return
 		}
 	}
+}
+
+// startWifiAwareNode starts a full node with wifi-aware discovery enabled.
+func startWifiAwareNode(t *testing.T, ctx context.Context) *Node {
+	t.Helper()
+	n, err := New(ctx,
+		options.Node().
+			SetDisableAPI(true).
+			P2P().
+			SetListenAddresses("/ip4/127.0.0.1/tcp/0").
+			SetEnableWifiAware(true).
+			Node().
+			Store().SetPath(t.TempDir()).
+			Node(),
+	)
+	require.NoError(t, err)
+	require.NoError(t, n.Start(ctx))
+	t.Cleanup(func() { _ = n.Close(ctx) })
+	return n
+}
+
+// nodeHasActivePeer reports whether the node has an active connection to the
+// peer with the given ID.
+func nodeHasActivePeer(t *testing.T, n *Node, id string) bool {
+	t.Helper()
+	addrs, err := n.peer.ActivePeers()
+	require.NoError(t, err)
+	for _, addr := range addrs {
+		if strings.Contains(addr, id) {
+			return true
+		}
+	}
+	return false
+}
+
+func TestWifiAware_TwoNodes_DiscoverAndConnect(t *testing.T) {
+	if os.Getenv("DEFRA_TEST_WIFI_AWARE") == "" {
+		t.Skip("requires mDNS multicast; set DEFRA_TEST_WIFI_AWARE=1")
+	}
+	ctx := context.Background()
+	n1 := startWifiAwareNode(t, ctx)
+	n2 := startWifiAwareNode(t, ctx)
+
+	id1 := n1.peer.ID()
+	id2 := n2.peer.ID()
+
+	// No bootstrap peers were configured: any connection between the two
+	// nodes can only come from wifi-aware discovery.
+	require.Eventually(t, func() bool {
+		return nodeHasActivePeer(t, n1, id2) && nodeHasActivePeer(t, n2, id1)
+	}, 15*time.Second, 100*time.Millisecond, "nodes should discover and connect via wifi-aware")
 }
 
 func TestBuildP2POpts_WifiAwareDisabledByDefault(t *testing.T) {
