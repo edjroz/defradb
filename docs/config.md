@@ -73,6 +73,16 @@ Enable libp2p's Circuit relay transport protocol. Defaults to `false`.
 
 https://docs.libp2p.io/concepts/circuit-relay/
 
+## `net.wifiawareenabled`
+
+Enable Wi-Fi Aware local mesh peer discovery (mDNS-backed). Defaults to `false`.
+
+Nodes on the same local network discover and connect to each other
+automatically, without configuring `net.peers`. To be reachable across
+machines the node must listen on a non-loopback address, e.g.
+`net.p2paddresses: [/ip4/0.0.0.0/tcp/9171]`, and the network must permit
+multicast between clients.
+
 ## `log.level`
 
 Log level to use. Options are `info` or `error`. Defaults to `info`.
