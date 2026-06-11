@@ -102,6 +102,7 @@ func MakeStartCommand(ctx context.Context) *cobra.Command {
 				SetListenAddresses(cfg.GetStringSlice("net.p2pAddresses")...).
 				SetEnablePubSub(cfg.GetBool("net.pubSubEnabled")).
 				SetEnableRelay(cfg.GetBool("net.relay")).
+				SetEnableWifiAware(cfg.GetBool("net.wifiAwareEnabled")).
 				SetBootstrapPeers(cfg.GetStringSlice("net.peers")...)
 			opts.HTTP().
 				SetAddress(cfg.GetString("api.address")).
