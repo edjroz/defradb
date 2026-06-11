@@ -13,6 +13,7 @@
 package node
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -131,6 +132,36 @@ func TestForwardWifiAwareEvents_PublishesPeerLost(t *testing.T) {
 	assert.Equal(t, "LOST", data.EventType)
 
 	close(events)
+}
+
+func TestNode_Start_WithWifiAware_ForwardsEvents(t *testing.T) {
+	ctx := context.Background()
+	n, err := New(ctx,
+		options.Node().
+			SetDisableAPI(true).
+			P2P().
+			SetListenAddresses("/ip4/127.0.0.1/tcp/0").
+			SetEnableWifiAware(true).
+			Node().
+			Store().SetPath(t.TempDir()).
+			Node(),
+	)
+	require.NoError(t, err)
+	require.NoError(t, n.Start(ctx))
+
+	// The initial Running:true status fires inside Start, before a caller can
+	// subscribe; its delivery is covered by the forwarder unit tests. Here we
+	// assert the end of the lifecycle: closing the node must terminate the
+	// forwarder, which publishes Running:false before the bus shuts down.
+	sub, err := n.DB.Events().Subscribe(event.WifiAwareStatusName)
+	require.NoError(t, err)
+
+	require.NoError(t, n.Close(ctx))
+
+	msg := receiveMessage(t, sub)
+	status, ok := msg.Data.(event.WifiAwareStatus)
+	require.True(t, ok, "expected WifiAwareStatus payload, got %T", msg.Data)
+	assert.False(t, status.Running)
 }
 
 func TestBuildP2POpts_WifiAwareDisabledByDefault(t *testing.T) {
