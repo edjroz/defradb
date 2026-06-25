@@ -80,3 +80,44 @@ func TestPubSubMessageHandler_ContextTimeout(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, resp)
 }
+
+// recordingHost records the protocol IDs registered via SetStreamHandler so tests
+// can assert which comm-channel handlers were wired up. The embedded client.Host is
+// nil; only SetStreamHandler is exercised here.
+type recordingHost struct {
+	client.Host
+	handlers []string
+}
+
+func (h *recordingHost) SetStreamHandler(protocolID string, _ client.StreamHandler) {
+	h.handlers = append(h.handlers, protocolID)
+}
+
+// TestRegisterReconcileProtocol_Gating asserts the set-reconciliation comm-channel
+// handlers are registered iff the feature is enabled. When disabled, no reconcile
+// stream handlers are registered, so disabled/old peers libp2p-reject the protocol
+// and fall back to pushlog/head sync (the off-path stays byte-identical to today).
+func TestRegisterReconcileProtocol_Gating(t *testing.T) {
+	t.Run("disabled: no reconcile handlers registered", func(t *testing.T) {
+		host := &recordingHost{}
+		p := &P2P{}
+
+		p.registerReconcileProtocol(host, false)
+
+		assert.Empty(t, host.handlers)
+		assert.Nil(t, p.reconcileProtocol)
+	})
+
+	t.Run("enabled: registers reconcile request/response handlers", func(t *testing.T) {
+		host := &recordingHost{}
+		p := &P2P{}
+
+		p.registerReconcileProtocol(host, true)
+
+		assert.ElementsMatch(t, []string{
+			"/defradb/reconcile_req/0.0.1",
+			"/defradb/reconcile_resp/0.0.1",
+		}, host.handlers)
+		assert.NotNil(t, p.reconcileProtocol)
+	})
+}

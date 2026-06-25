@@ -25,6 +25,7 @@ func TestDefaultDBConfig(t *testing.T) {
 	assert.True(t, cfg.EnableSigning)
 	assert.False(t, cfg.DocumentACP.HasValue())
 	assert.False(t, cfg.P2P.HasValue())
+	assert.False(t, cfg.EnableSetReconciliation)
 }
 
 func TestDBConfigWithMaxRetries(t *testing.T) {
