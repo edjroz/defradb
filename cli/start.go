@@ -98,7 +98,8 @@ func MakeStartCommand(ctx context.Context) *cobra.Command {
 			opts.DB().
 				SetMaxTxnRetries(cfg.GetInt("datastore.MaxTxnRetries")).
 				SetRetryIntervals(replicatorRetryIntervals).
-				SetLensRuntime(options.NodeLensRuntimeType(cfg.GetString("lens.runtime")))
+				SetLensRuntime(options.NodeLensRuntimeType(cfg.GetString("lens.runtime"))).
+				SetEnableSetReconciliation(cfg.GetBool("net.setReconciliationEnabled"))
 			opts.P2P().
 				SetListenAddresses(cfg.GetStringSlice("net.p2pAddresses")...).
 				SetEnablePubSub(cfg.GetBool("net.pubSubEnabled")).
@@ -308,6 +309,11 @@ func MakeStartCommand(ctx context.Context) *cobra.Command {
 		"pubsub",
 		cfg.GetBool(config.ConfigFlags["pubsub"]),
 		"Enable the pubsub system",
+	)
+	cmd.PersistentFlags().Bool(
+		"set-reconciliation",
+		cfg.GetBool(config.ConfigFlags["set-reconciliation"]),
+		"Enable experimental range-based set reconciliation sync (default off)",
 	)
 	cmd.PersistentFlags().Bool(
 		"relay",

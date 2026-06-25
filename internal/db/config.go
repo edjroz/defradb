@@ -39,7 +39,8 @@ func defaultDBConfig() intOpts.DBOptions {
 				time.Minute * 16,
 				time.Minute * 32,
 			},
-			P2PBlockSyncTimeout: time.Second * 5,
+			P2PBlockSyncTimeout:     time.Second * 5,
+			EnableSetReconciliation: false,
 		},
 	}
 }

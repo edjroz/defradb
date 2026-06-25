@@ -199,6 +199,10 @@ type NodeDBOptions struct {
 	RetryIntervals []time.Duration
 	// P2PBlockSyncTimeout is the timeout duration for syncing block links.
 	P2PBlockSyncTimeout time.Duration
+	// EnableSetReconciliation enables the experimental range-based set
+	// reconciliation (Negentropy) anti-entropy sync protocol. Disabled by default;
+	// when off, the reconcile stream handlers are never registered.
+	EnableSetReconciliation bool
 	// LensRuntime specifies the lens runtime type.
 	LensRuntime NodeLensRuntimeType
 	// LensPoolSize is the pool size for the lens runtime.
@@ -489,6 +493,13 @@ func (sb *NodeDBOptionsBuilder) SetRetryIntervals(intervals []time.Duration) *No
 // SetP2PBlockSyncTimeout sets the timeout duration for syncing block links.
 func (sb *NodeDBOptionsBuilder) SetP2PBlockSyncTimeout(timeout time.Duration) *NodeDBOptionsBuilder {
 	sb.append(func(opts *NodeDBOptions) { opts.P2PBlockSyncTimeout = timeout })
+	return sb
+}
+
+// SetEnableSetReconciliation sets whether the experimental range-based set
+// reconciliation sync protocol is enabled.
+func (sb *NodeDBOptionsBuilder) SetEnableSetReconciliation(enable bool) *NodeDBOptionsBuilder {
+	sb.append(func(opts *NodeDBOptions) { opts.EnableSetReconciliation = enable })
 	return sb
 }
 

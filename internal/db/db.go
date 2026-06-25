@@ -118,6 +118,8 @@ type DB struct {
 	retryIntervals []time.Duration
 	// timeout duration for syncing block links.
 	p2pBlockSyncTimeout time.Duration
+	// setReconciliationEnabled gates the experimental set-reconciliation sync protocol.
+	setReconciliationEnabled bool
 
 	// lockSet contains and manages the set of locks held and available to this Defra instance.
 	lockSet *lock.LockSet
@@ -156,24 +158,25 @@ func newDB(
 	lockSet := lock.NewLockSet()
 
 	db := &DB{
-		rootstore:               rootstore,
-		blockStoreChunkSize:     cfg.ChunkSize,
-		maxTxnRetries:           cfg.MaxTxnRetries,
-		nodeIdentity:            cfg.Identity,
-		signingDisabled:         !cfg.EnableSigning,
-		searchableEncryptionKey: cfg.SearchableEncryptionKey,
-		nodeACP:                 nodeACP,
-		documentACP:             cfg.DocumentACP,
-		parser:                  parser,
-		events:                  event.NewChannelBus(commandBufferSize, eventBufferSize),
-		ctx:                     ctx,
-		ctxCancel:               cancel,
-		docMergeQueue:           newMergeQueue(),
-		colMergeQueue:           newMergeQueue(),
-		retryIntervals:          cfg.RetryIntervals,
-		p2pBlockSyncTimeout:     cfg.P2PBlockSyncTimeout,
-		lockSet:                 lockSet,
-		collectionRepository:    description.NewColCache(lockSet, datastore.NewUnsafeDatastore(rootstore)),
+		rootstore:                rootstore,
+		blockStoreChunkSize:      cfg.ChunkSize,
+		maxTxnRetries:            cfg.MaxTxnRetries,
+		nodeIdentity:             cfg.Identity,
+		signingDisabled:          !cfg.EnableSigning,
+		searchableEncryptionKey:  cfg.SearchableEncryptionKey,
+		nodeACP:                  nodeACP,
+		documentACP:              cfg.DocumentACP,
+		parser:                   parser,
+		events:                   event.NewChannelBus(commandBufferSize, eventBufferSize),
+		ctx:                      ctx,
+		ctxCancel:                cancel,
+		docMergeQueue:            newMergeQueue(),
+		colMergeQueue:            newMergeQueue(),
+		retryIntervals:           cfg.RetryIntervals,
+		p2pBlockSyncTimeout:      cfg.P2PBlockSyncTimeout,
+		setReconciliationEnabled: cfg.EnableSetReconciliation,
+		lockSet:                  lockSet,
+		collectionRepository:     description.NewColCache(lockSet, datastore.NewUnsafeDatastore(rootstore)),
 	}
 
 	lensRuntime, err := newLensRuntime(LensRuntimeType(cfg.LensRuntime))
@@ -388,6 +391,12 @@ func (db *DB) RetryIntervals() []time.Duration {
 // P2PBlockSyncTimeout is the timeout duration for syncing block links.
 func (db *DB) P2PBlockSyncTimeout() time.Duration {
 	return db.p2pBlockSyncTimeout
+}
+
+// P2PSetReconciliationEnabled reports whether the experimental range-based set
+// reconciliation sync protocol is enabled.
+func (db *DB) P2PSetReconciliationEnabled() bool {
+	return db.setReconciliationEnabled
 }
 
 // PrintDump prints the entire database to console.
