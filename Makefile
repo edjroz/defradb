@@ -345,6 +345,12 @@ test\:bench:
 test\:bench-short:
 	@$(MAKE) -C ./tests/bench/ bench:short
 
+# Network P2P sync baselines. These start real libp2p nodes and are opt-in
+# (skipped in the default bench lane); see tests/bench/sync/README.md.
+.PHONY: test\:bench-sync
+test\:bench-sync:
+	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench Benchmark_Sync -benchtime=1x -timeout=15m
+
 .PHONY: test\:scripts
 test\:scripts:
 	@$(MAKE) -C ./tools/scripts/ test

@@ -1,0 +1,11 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/sourcenetwork/defradb/tests/bench/sync
+cpu: Apple M2
+Benchmark_Sync_ColdStart_docs10_upd0-8                	       1	1240529959 ns/op	     12960 blockBytes/op	        60.00 blocks/op	      1509 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.06202 heapDeltaMiB/op	      1240 syncMs/op
+Benchmark_Sync_ColdStart_docs10_upd10-8               	       1	7527994458 ns/op	     84960 blockBytes/op	       360.0 blocks/op	      1509 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.1417 heapDeltaMiB/op	      7528 syncMs/op
+Benchmark_Sync_ColdStart_docs50_upd0-8                	       1	6277353500 ns/op	     64840 blockBytes/op	       300.0 blocks/op	      3190 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.1536 heapDeltaMiB/op	      6277 syncMs/op
+Benchmark_Sync_IncrementalTail_docs10_base5_tail1-8   	       1	 621848334 ns/op	      7220 blockBytes/op	        30.00 blocks/op	       429.0 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.04939 heapDeltaMiB/op	       621.8 syncMs/op
+Benchmark_Sync_ManyHead_docs10_base5_k3-8             	       1	1240313959 ns/op	     14910 blockBytes/op	        60.00 blocks/op	       429.0 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.08244 heapDeltaMiB/op	      1240 syncMs/op
+PASS
+ok  	github.com/sourcenetwork/defradb/tests/bench/sync	32.547s

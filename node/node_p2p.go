@@ -48,6 +48,15 @@ func (n *Node) startP2P(ctx context.Context, store corekv.ReaderWriter, chunkSiz
 	if err != nil {
 		return err
 	}
-	n.peer = peer
+
+	// Optionally wrap the host for test/benchmark instrumentation. The decorator
+	// is nil in production. A returned value that does not satisfy Peer is ignored.
+	var instrumented Peer = peer
+	if dec := n.opts.P2P.HostDecorator; dec != nil {
+		if wrapped, ok := dec(peer).(Peer); ok {
+			instrumented = wrapped
+		}
+	}
+	n.peer = instrumented
 	return nil
 }

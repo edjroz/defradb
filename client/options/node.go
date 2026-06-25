@@ -111,7 +111,23 @@ type NodeP2POptions struct {
 	EnableClearBackoffOnRetry bool
 	// PrivateKey is the private key for the P2P node.
 	PrivateKey []byte
+	// HostDecorator, when set, wraps the p2p host immediately after it is created
+	// and before it is handed to the database/p2p subsystem. It is intended solely
+	// for test and benchmark instrumentation (e.g. counting bytes or round-trips);
+	// it is nil in production and has no effect when unset.
+	//
+	// The argument and return value are the node's peer (which satisfies
+	// client.Host plus Close). They are typed as `any` to avoid an import cycle:
+	// the client package imports client/options, so this package cannot reference
+	// client.Host directly. A returned value that does not satisfy the node's
+	// internal Peer interface is ignored, leaving the original host in place.
+	HostDecorator P2PHostDecorator `json:"-"`
 }
+
+// P2PHostDecorator wraps a freshly-created p2p host for instrumentation. See
+// [NodeP2POptions.HostDecorator]. The host is passed and returned as `any` to
+// avoid an import cycle with the client package.
+type P2PHostDecorator func(host any) any
 
 // NodeHTTPOptions contains HTTP API server configuration values.
 type NodeHTTPOptions struct {
@@ -538,6 +554,13 @@ func (sb *NodeP2POptionsBuilder) SetEnableRelay(enable bool) *NodeP2POptionsBuil
 // SetEnableClearBackoffOnRetry sets whether to clear backoff on retry.
 func (sb *NodeP2POptionsBuilder) SetEnableClearBackoffOnRetry(enable bool) *NodeP2POptionsBuilder {
 	sb.append(func(opts *NodeP2POptions) { opts.EnableClearBackoffOnRetry = enable })
+	return sb
+}
+
+// SetHostDecorator sets a host decorator used to instrument the p2p host in
+// tests and benchmarks. See [NodeP2POptions.HostDecorator]. Nil in production.
+func (sb *NodeP2POptionsBuilder) SetHostDecorator(dec P2PHostDecorator) *NodeP2POptionsBuilder {
+	sb.append(func(opts *NodeP2POptions) { opts.HostDecorator = dec })
 	return sb
 }
 
