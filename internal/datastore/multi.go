@@ -32,27 +32,32 @@ var (
 	blockStoreKey  = byte('b')
 	peerStoreKey   = byte('p')
 	encStoreKey    = byte('e')
+	// reconcileIndexStoreKey namespaces the ordered block-CID index used by the
+	// experimental set-reconciliation sync (maintained only when enabled).
+	reconcileIndexStoreKey = byte('r')
 )
 
 type Multistore struct {
-	block  Blockstore
-	data   *datastore
-	enc    Blockstore
-	head   corekv.ReaderWriter
-	peer   corekv.ReaderWriter
-	root   corekv.ReaderWriter
-	system corekv.ReaderWriter
+	block          Blockstore
+	data           *datastore
+	enc            Blockstore
+	head           corekv.ReaderWriter
+	peer           corekv.ReaderWriter
+	reconcileIndex corekv.ReaderWriter
+	root           corekv.ReaderWriter
+	system         corekv.ReaderWriter
 }
 
 func NewMultistore(rootstore corekv.ReaderWriter, lockSet *lock.LockSet, chunkSize immutable.Option[int]) *Multistore {
 	return &Multistore{
-		block:  BlockstoreFrom(rootstore, chunkSize),
-		data:   newDatastore(rootstore, lockSet),
-		enc:    newBlockstore(namespace.Wrap(rootstore, []byte{encStoreKey})),
-		head:   namespace.Wrap(rootstore, []byte{headStoreKey}),
-		peer:   namespace.Wrap(rootstore, []byte{peerStoreKey}),
-		root:   rootstore,
-		system: namespace.Wrap(rootstore, []byte{systemStoreKey}),
+		block:          BlockstoreFrom(rootstore, chunkSize),
+		data:           newDatastore(rootstore, lockSet),
+		enc:            newBlockstore(namespace.Wrap(rootstore, []byte{encStoreKey})),
+		head:           namespace.Wrap(rootstore, []byte{headStoreKey}),
+		peer:           namespace.Wrap(rootstore, []byte{peerStoreKey}),
+		reconcileIndex: namespace.Wrap(rootstore, []byte{reconcileIndexStoreKey}),
+		root:           rootstore,
+		system:         namespace.Wrap(rootstore, []byte{systemStoreKey}),
 	}
 }
 
@@ -74,6 +79,10 @@ func (m *Multistore) Headstore() corekv.ReaderWriter {
 
 func (m *Multistore) Peerstore() corekv.ReaderWriter {
 	return m.peer
+}
+
+func (m *Multistore) ReconcileIndex() corekv.ReaderWriter {
+	return m.reconcileIndex
 }
 
 func (m *Multistore) Rootstore() corekv.ReaderWriter {

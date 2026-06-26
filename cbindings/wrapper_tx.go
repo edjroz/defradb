@@ -258,6 +258,10 @@ func (txn *Transaction) Peerstore() corekv.ReaderWriter {
 	return txn.tx.Peerstore()
 }
 
+func (txn *Transaction) ReconcileIndex() corekv.ReaderWriter {
+	return txn.tx.ReconcileIndex()
+}
+
 func (txn *Transaction) Rootstore() corekv.ReaderWriter {
 	return txn.tx.Rootstore()
 }

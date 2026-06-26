@@ -38,6 +38,10 @@ type Txn interface {
 	// Peerstore returns the prefixed store for the peerstore
 	Peerstore() corekv.ReaderWriter
 
+	// ReconcileIndex returns the prefixed store for the set-reconciliation ordered
+	// block-CID index (maintained only when set reconciliation is enabled).
+	ReconcileIndex() corekv.ReaderWriter
+
 	// Rootstore returns the rootstore
 	Rootstore() corekv.ReaderWriter
 

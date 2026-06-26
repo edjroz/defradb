@@ -79,6 +79,10 @@ func (t *TxnShim) Headstore() corekv.ReaderWriter {
 	panic("unimplemented")
 }
 
+func (t *TxnShim) ReconcileIndex() corekv.ReaderWriter {
+	panic("unimplemented")
+}
+
 func (t *TxnShim) ID() uint64 {
 	return t.id
 }
