@@ -28,9 +28,21 @@ func benchVector(b *testing.B, n int) *Vector {
 	return v
 }
 
+func benchSegmentTree(b *testing.B, n int) *SegmentTree {
+	b.Helper()
+	builder := NewSegmentTreeBuilder(n)
+	for i := 0; i < n; i++ {
+		builder.Add(0, tid(i))
+	}
+	st, err := builder.Build()
+	if err != nil {
+		b.Fatal(err)
+	}
+	return st
+}
+
 // BenchmarkVectorFingerprintScan characterizes the cost of the literal O(n)
-// full-range fingerprint scan as the set grows. It is the baseline the Phase-4
-// maintained tree (O(log n) fingerprints) will be measured against.
+// full-range fingerprint scan as the set grows.
 func BenchmarkVectorFingerprintScan(b *testing.B) {
 	for _, n := range []int{100, 1000, 10000, 100000} {
 		v := benchVector(b, n)
@@ -38,6 +50,21 @@ func BenchmarkVectorFingerprintScan(b *testing.B) {
 			b.ReportAllocs()
 			for i := 0; i < b.N; i++ {
 				_ = v.Fingerprint(0, n)
+			}
+		})
+	}
+}
+
+// BenchmarkSegmentTreeFingerprint measures the O(log n) full-range fingerprint of
+// the segment tree against the Vector's O(n) scan above — the Phase-4b speedup.
+// (Build cost is excluded; it is amortized across a session's many fingerprints.)
+func BenchmarkSegmentTreeFingerprint(b *testing.B) {
+	for _, n := range []int{100, 1000, 10000, 100000} {
+		st := benchSegmentTree(b, n)
+		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				_ = st.Fingerprint(0, n)
 			}
 		})
 	}
