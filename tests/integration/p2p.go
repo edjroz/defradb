@@ -337,3 +337,40 @@ func reconcileDocument(s *state.State, action ReconcileDocument) {
 	expectedErrorRaised := AssertError(s.T, err, action.ExpectedError)
 	assertExpectedErrorRaised(s.T, action.ExpectedError, expectedErrorRaised)
 }
+
+// reconcileCollection runs collection-scope set reconciliation between a node and a
+// peer. Synchronous (fetch + merge before returning), so no WaitForSync is required.
+func reconcileCollection(s *state.State, action ReconcileCollection) {
+	node := s.Nodes[action.NodeID]
+	peerNode := s.Nodes[action.PeerNodeID]
+
+	peerOpts := options.PeerInfo()
+	peerIdent := getIdentityForRequestSpecificToNode(s, NodeIdentity(action.PeerNodeID), action.PeerNodeID)
+	if peerIdent.HasValue() {
+		peerOpts.SetIdentity(peerIdent.Value())
+	}
+	addresses, err := peerNode.PeerInfo(s.Ctx, peerOpts)
+	require.NoError(s.T, err)
+	require.NotEmpty(s.T, addresses)
+	addrInfo, err := peer.AddrInfoFromString(addresses[0])
+	require.NoError(s.T, err)
+	peerID := addrInfo.ID.String()
+
+	collectionName := node.Collections[action.CollectionID].Name()
+
+	reconcileOpts := options.ReconcileCollection()
+	identOption := getIdentityForRequestSpecificToNode(s, action.Identity, action.NodeID)
+	if identOption.HasValue() {
+		reconcileOpts.SetIdentity(identOption.Value())
+	}
+
+	err = withRetryOnNode(
+		node,
+		func() error {
+			return node.ReconcileCollection(s.Ctx, peerID, collectionName, reconcileOpts)
+		},
+	)
+
+	expectedErrorRaised := AssertError(s.T, err, action.ExpectedError)
+	assertExpectedErrorRaised(s.T, action.ExpectedError, expectedErrorRaised)
+}

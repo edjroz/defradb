@@ -716,3 +716,26 @@ type ReconcileDocument struct {
 	// Any error expected from the action.
 	ExpectedError string
 }
+
+// ReconcileCollection runs range-based set reconciliation over a collection's full
+// composite block set between NodeID and PeerNodeID, converging the initiating node.
+// It requires [TestCase.EnableSetReconciliation].
+//
+// The call is synchronous: missing blocks are fetched and merged before it returns,
+// so assertions on the initiating node can follow directly without a [WaitForSync].
+type ReconcileCollection struct {
+	// NodeID holds the ID (index) of the node that initiates reconciliation.
+	NodeID int
+
+	// PeerNodeID holds the ID (index) of the peer to reconcile against.
+	PeerNodeID int
+
+	// The identity of this request. Optional.
+	Identity immutable.Option[state.Identity]
+
+	// The collection to reconcile.
+	CollectionID int
+
+	// Any error expected from the action.
+	ExpectedError string
+}

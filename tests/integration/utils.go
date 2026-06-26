@@ -477,6 +477,9 @@ func performAction(
 	case ReconcileDocument:
 		reconcileDocument(s, action)
 
+	case ReconcileCollection:
+		reconcileCollection(s, action)
+
 	case Benchmark:
 		benchmarkAction(s, testCase, actionIndex, action)
 
