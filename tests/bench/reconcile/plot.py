@@ -321,6 +321,43 @@ def main():
             ],
             ylog=False, yfmt=lambda v: f"{v:.0f}"))
 
+    # 7/8. M2 collection-scope collapse: default doc-sync vs M1 per-document vs M2
+    # per-collection, all converging the same 10-doc set on real nodes.
+    m2_path = os.path.join(HERE, "data", "measured_m2.csv")
+    if os.path.exists(m2_path):
+        with open(m2_path, newline="") as f:
+            m2rows = list(csv.DictReader(f))
+
+        def m2(approach, key):
+            for r in m2rows:
+                if r["scenario"] == "coldstart_docs10" and r["approach"] == approach:
+                    return float(r[key])
+            return 0.0
+
+        written.append(bar_chart(
+            "07_m2_round_trips.svg",
+            "Round-trips to converge 10 docs (real nodes)",
+            "Per-collection reconciliation (M2) runs ONE session, collapsing M1's per-document sessions.",
+            "control messages (round-trip proxy)",
+            [
+                ("default\ndoc-sync", m2("default_sync", "ctrl_msgs"), BASELINE_COLOR),
+                ("M1 per-doc\n(10 sessions)", m2("reconcile_m1_perdoc", "ctrl_msgs"), "#e8a13a"),
+                ("M2 per-collection\n(1 session)", m2("reconcile_m2_collection", "ctrl_msgs"), NG_COLOR),
+            ],
+            ylog=False, yfmt=lambda v: f"{v:.0f}"))
+
+        written.append(bar_chart(
+            "08_m2_control_bytes.svg",
+            "Control bytes to converge 10 docs (real nodes)",
+            "M2 collapses M1's per-document overhead to ~broadcast levels; same payload. Log scale.",
+            "control bytes (log scale)",
+            [
+                ("default\ndoc-sync", m2("default_sync", "ctrl_bytes"), BASELINE_COLOR),
+                ("M1 per-doc", m2("reconcile_m1_perdoc", "ctrl_bytes"), "#e8a13a"),
+                ("M2 per-collection", m2("reconcile_m2_collection", "ctrl_bytes"), NG_COLOR),
+            ],
+            ylog=True, yfmt=fmt_bytes))
+
     # index.html
     cards = "\n".join(
         f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
@@ -342,12 +379,12 @@ cost of a few extra logarithmic round-trips.</p>
 <p>Negentropy numbers are measured directly from the Phase-2 engine
 (<code>internal/db/p2p/negentropy</code>); the default-sync baseline is modelled as a
 naive full-identifier exchange at the same per-item accounting — a generous lower
-bound on what the real DAG-walk costs. See <code>README.md</code> for methodology.</p>
+bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md</code> for methodology.</p>
 <p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
 <b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
 doc-sync (one session per document), with identical payload. The asymptotic win
-needs M2's per-collection batching &mdash; see <code>README.md</code>.</p>
+needs M2's per-collection batching &mdash; see <code>tests/bench/reconcile/README.md</code>.</p>
 {cards}
 </body></html>"""
     with open(os.path.join(HERE, "index.html"), "w") as f:

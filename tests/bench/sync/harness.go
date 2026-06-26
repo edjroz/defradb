@@ -142,6 +142,19 @@ func (sn *syncNode) reconcileDocs(ctx context.Context, tb testing.TB, peerID str
 	return time.Since(start)
 }
 
+// reconcileCollection runs collection-scope set reconciliation against peerID,
+// converging this node over the whole collection in one session, and returns the
+// wall-clock (it is synchronous: fetch + merge complete before it returns).
+func (sn *syncNode) reconcileCollection(ctx context.Context, tb testing.TB, peerID string) time.Duration {
+	tb.Helper()
+	recCtx, cancel := context.WithTimeout(ctx, syncTimeout)
+	defer cancel()
+
+	start := time.Now()
+	require.NoError(tb, sn.p2p.ReconcileCollection(recCtx, peerID, collectionName))
+	return time.Since(start)
+}
+
 // addCollection registers the benchmark schema and returns its collection.
 func (sn *syncNode) addCollection(ctx context.Context, tb testing.TB) client.Collection {
 	tb.Helper()

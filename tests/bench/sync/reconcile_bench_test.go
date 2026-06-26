@@ -73,3 +73,93 @@ func Benchmark_Reconcile_ManyHead_docs10_base5_k3(b *testing.B) {
 func Benchmark_Reconcile_SingleDoc_base5_k3(b *testing.B) {
 	runReconcileManyHead(b, 1, 5, 3)
 }
+
+// runReconcileCollectionColdStart converges an empty receiver over a whole
+// collection in ONE collection-scope reconciliation session (M2), versus the
+// per-document broadcast doc-sync of Benchmark_Sync_ColdStart_*. This is the
+// collection-scale measurement: one session discovers and fetches the full block
+// set, so the control cost is a single logarithmic session rather than a
+// per-document request list.
+func runReconcileCollectionColdStart(b *testing.B, docCount, updatesPerDoc int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false, withReconciliation)
+		recv := startSyncNode(ctx, b, true, withReconciliation)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		seedDocs(ctx, b, srcCol, docCount, updatesPerDoc)
+		connectNodes(ctx, b, recv, src)
+
+		srcPeerID := src.peerID(ctx, b)
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.reconcileCollection(ctx, b, srcPeerID)
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+// Direct contrast to Benchmark_Sync_ColdStart_*: the empty receiver pulls the whole
+// collection, but via one reconciliation session instead of a doc-sync broadcast.
+func Benchmark_Reconcile_Collection_ColdStart_docs10_upd0(b *testing.B) {
+	runReconcileCollectionColdStart(b, 10, 0)
+}
+
+func Benchmark_Reconcile_Collection_ColdStart_docs50_upd0(b *testing.B) {
+	runReconcileCollectionColdStart(b, 50, 0)
+}
+
+// runReconcileCollectionTail measures the partial-catch-up win: the receiver already
+// shares a base, the source adds a small tail, and one collection-scope session
+// fetches only the divergent blocks — the control cost should track the diff, not
+// the collection size.
+func runReconcileCollectionTail(b *testing.B, docCount, baseUpdates, tail int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false, withReconciliation)
+		recv := startSyncNode(ctx, b, true, withReconciliation)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		docIDs := seedDocs(ctx, b, srcCol, docCount, baseUpdates)
+		connectNodes(ctx, b, recv, src)
+		recv.reconcileCollection(ctx, b, src.peerID(ctx, b)) // untimed: establish shared base
+		applyTail(ctx, b, srcCol, docIDs, tail)
+
+		srcPeerID := src.peerID(ctx, b)
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.reconcileCollection(ctx, b, srcPeerID)
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+// Large shared base, tiny tail: the regime where collection reconciliation's control
+// cost tracks the diff rather than the collection size.
+func Benchmark_Reconcile_Collection_Tail_docs50_base2_tail1(b *testing.B) {
+	runReconcileCollectionTail(b, 50, 2, 1)
+}

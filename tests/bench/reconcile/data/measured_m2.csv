@@ -1,0 +1,6 @@
+scenario,approach,docs,ctrl_bytes,ctrl_msgs,blocks,block_bytes,sync_ms
+coldstart_docs10,default_sync,10,1509,3,60,12960,1293
+coldstart_docs10,reconcile_m1_perdoc,10,18970,42,60,14910,1945
+coldstart_docs10,reconcile_m2_collection,10,2172,4,60,12960,1293
+coldstart_docs50,default_sync,50,3190,3,300,64840,6539
+coldstart_docs50,reconcile_m2_collection,50,3693,4,300,64840,6547

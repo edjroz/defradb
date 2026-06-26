@@ -16,16 +16,18 @@ cost of a few extra logarithmic round-trips.</p>
 <p>Negentropy numbers are measured directly from the Phase-2 engine
 (<code>internal/db/p2p/negentropy</code>); the default-sync baseline is modelled as a
 naive full-identifier exchange at the same per-item accounting — a generous lower
-bound on what the real DAG-walk costs. See <code>README.md</code> for methodology.</p>
+bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md</code> for methodology.</p>
 <p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
 <b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
 doc-sync (one session per document), with identical payload. The asymptotic win
-needs M2's per-collection batching &mdash; see <code>README.md</code>.</p>
+needs M2's per-collection batching &mdash; see <code>tests/bench/reconcile/README.md</code>.</p>
 <figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/></figure>
 <figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/></figure>
 <figure><img src="plots/03_bytes_vs_d.svg" alt="03_bytes_vs_d.svg"/></figure>
 <figure><img src="plots/04_rounds_vs_n.svg" alt="04_rounds_vs_n.svg"/></figure>
 <figure><img src="plots/05_measured_control_bytes.svg" alt="05_measured_control_bytes.svg"/></figure>
 <figure><img src="plots/06_measured_round_trips.svg" alt="06_measured_round_trips.svg"/></figure>
+<figure><img src="plots/07_m2_round_trips.svg" alt="07_m2_round_trips.svg"/></figure>
+<figure><img src="plots/08_m2_control_bytes.svg" alt="08_m2_control_bytes.svg"/></figure>
 </body></html>

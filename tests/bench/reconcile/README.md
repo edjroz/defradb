@@ -119,6 +119,41 @@ The benchmark's value at M1 is therefore (1) validating the real path end-to-end
 (convergence, payload ∝ diff) and (2) quantifying the per-session overhead that M2
 must amortise — not claiming a bandwidth win at this scale.
 
+### Measured — Phase 4a / M2 per-collection (real nodes, Apple M4 Pro)
+
+Phase 4a reconciles a whole collection's composite block set in **one session**
+(`ReconcileCollection`), versus M1's one-session-per-document. Reproduce:
+
+```sh
+DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$' \
+    -bench 'Benchmark_(Sync_ColdStart|Reconcile_Collection)' -benchtime=1x -timeout=10m
+```
+
+Converging a 10-document collection (cold start), three ways:
+
+| approach | ctrlBytes | ctrlMsgs | blocks | blockBytes |
+|---|--:|--:|--:|--:|
+| default doc-sync (broadcast) | 1,509 | 3 | 60 | 12,960 |
+| M1 per-document (10 sessions)¹ | 18,970 | 42 | 60 | 14,910 |
+| **M2 per-collection (1 session)** | **2,172** | **4** | 60 | 12,960 |
+
+¹ M1 figure is the post-partition `docs10` run; the apples-to-apples point is the
+**session count** — M1 opens one session per document (≈42 round-trips for 10 docs),
+M2 opens one (4 round-trips), regardless of document count.
+
+**The M2 win (charts 07–08):** per-collection reconciliation **collapses M1's
+per-document overhead** — round-trips drop ~10× (42 → 4) and control bytes ~9×
+(19 KB → 2.2 KB), landing at roughly broadcast doc-sync levels, with identical
+payload. At *cold start* (diff = the whole collection) M2's control cost is
+necessarily comparable to broadcast — the asymptotic *bandwidth* win is in
+**partial catch-up** (large shared base, small diff), where one session fetches only
+the divergent blocks. The synthetic sweep (charts 01–04) models that regime; a true
+tiny-diff/large-base measurement is the next harness addition.
+
+The deeper win is correctness, not just bytes: M2 gives true **O(diff) cold-start**
+— it discovers the missing block set up front and fetches it directly, instead of
+walking the entire DAG.
+
 ### Real-harness anchor (Apple M4 Pro)
 
 Measured `ctrlBytes` from the Phase-0 full-DAG-walk harness (`tests/bench/sync`)
