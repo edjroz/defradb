@@ -59,6 +59,7 @@ func setupNode(
 		opts = defaultNodeOpts()
 	}
 	opts.DB().SetEnableSigning(testCase.EnableSigning)
+	opts.DB().SetEnableSetReconciliation(testCase.EnableSetReconciliation)
 
 	if s.EnableSearchableEncryption {
 		seKey, err := crypto.GenerateAES256()

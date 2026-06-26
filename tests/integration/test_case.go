@@ -73,6 +73,11 @@ type TestCase struct {
 	// Use [IdentityTypes] to customize the key type that is used for identity and signing.
 	EnableSigning bool
 
+	// EnableSetReconciliation enables the experimental range-based set reconciliation
+	// (Negentropy) sync protocol on every node in the test. It is applied uniformly to
+	// all nodes (the framework configures DB options per test-case, not per-node).
+	EnableSetReconciliation bool
+
 	// EnableSearchableEncryption indicates if searchable encryption should be enabled for the test.
 	// When enabled, a searchable encryption key will be generated and passed to the database.
 	EnableSearchableEncryption bool
@@ -677,6 +682,36 @@ type SyncDocs struct {
 	// be looked up for WaitForSync action.
 	// There must an item for each document in DocIDs.
 	SourceNodes []int
+
+	// Any error expected from the action.
+	ExpectedError string
+}
+
+// ReconcileDocument runs range-based set reconciliation for a single document's heads
+// between NodeID and PeerNodeID, converging both nodes. It requires
+// [TestCase.EnableSetReconciliation].
+//
+// The call is synchronous: reconciliation pulls and merges the missing heads (and
+// pushes the heads the peer is missing) before returning, so assertions on either
+// node can follow directly without a [WaitForSync].
+type ReconcileDocument struct {
+	// NodeID holds the ID (index) of the node that initiates reconciliation.
+	NodeID int
+
+	// PeerNodeID holds the ID (index) of the peer to reconcile against.
+	PeerNodeID int
+
+	// The identity of this request. Optional.
+	//
+	// If node acp is enabled, identity will be used to check if this operation can be performed.
+	Identity immutable.Option[state.Identity]
+
+	// The collection containing the document to reconcile.
+	CollectionID int
+
+	// DocID is the index of the document to reconcile (a reference to a previously
+	// added document, resolved to an actual document ID at runtime).
+	DocID int
 
 	// Any error expected from the action.
 	ExpectedError string
