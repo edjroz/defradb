@@ -358,6 +358,56 @@ def main():
             ],
             ylog=True, yfmt=fmt_bytes))
 
+    # 9. M5 tiny-diff: the asymptotic bandwidth win on real nodes. One diverged
+    # doc in a growing collection — default control scales with the collection
+    # size (it must list every docID), reconciliation tracks the single-block diff.
+    m5_path = os.path.join(HERE, "data", "measured_m5.csv")
+    if os.path.exists(m5_path):
+        with open(m5_path, newline="") as f:
+            m5rows = list(csv.DictReader(f))
+
+        def m5series(approach):
+            pts = [(float(r["docs"]), float(r["ctrl_bytes"])) for r in m5rows
+                   if r["approach"] == approach]
+            return sorted(pts)
+
+        dflt = m5series("default_sync")
+        recon = m5series("reconcile_m2_collection")
+        written.append(line_chart(
+            "09_tinydiff_bytes_vs_docs.svg",
+            "Control bytes to sync ONE changed doc vs collection size (real nodes)",
+            "Default must enumerate every docID (control grows with the collection); "
+            "reconciliation tracks the single-block diff and stays ~flat.",
+            "collection size  (documents)",
+            "control bytes",
+            [
+                {"label": "default doc-sync", "color": BASELINE_COLOR, "points": dflt,
+                 "notes": [(d[0], d[1], fmt_bytes(d[1])) for d in dflt]},
+                {"label": "reconcile (M2)", "color": NG_COLOR, "points": recon,
+                 "notes": [(d[0], d[1], fmt_bytes(d[1])) for d in recon]},
+            ],
+            xlog=False, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_bytes))
+
+    # 10. M5 index-write cost: the always-on maintenance-hook overhead, measured
+    # locally (no peer) with the flag off vs on.
+    iw_path = os.path.join(HERE, "data", "measured_indexwrite.csv")
+    if os.path.exists(iw_path):
+        with open(iw_path, newline="") as f:
+            iwrows = {r["flag"]: r for r in csv.DictReader(f)}
+        off_ms = float(iwrows["off"]["ns_op"]) / 1e6
+        on_ms = float(iwrows["on"]["ns_op"]) / 1e6
+        pct = (on_ms / off_ms - 1) * 100 if off_ms else 0
+        written.append(bar_chart(
+            "10_indexwrite_cost.svg",
+            "Local write cost with reconciliation off vs on (real node)",
+            f"Seeding 50 docs x 5 updates; the extra per-commit ordered-index write adds ~{pct:.0f}%.",
+            "write time per op (ms, lower is better)",
+            [
+                ("reconciliation off", off_ms, BASELINE_COLOR),
+                ("reconciliation on", on_ms, NG_COLOR),
+            ],
+            ylog=False, yfmt=lambda v: f"{v:.0f}ms"))
+
     # index.html
     cards = "\n".join(
         f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
@@ -383,8 +433,15 @@ bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md
 <p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
 <b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
-doc-sync (one session per document), with identical payload. The asymptotic win
-needs M2's per-collection batching &mdash; see <code>tests/bench/reconcile/README.md</code>.</p>
+doc-sync (one session per document), with identical payload. <b>Charts 7&ndash;8</b>
+show M2's per-collection batching collapsing that per-document overhead back to
+~broadcast levels. <b>Chart&nbsp;9</b> is the payoff measured on real nodes: with one
+changed document in a growing collection, default doc-sync's control traffic rises
+with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
+reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
+the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
+always-on ordered-index write adds only a small per-commit overhead. See
+<code>tests/bench/reconcile/README.md</code>.</p>
 {cards}
 </body></html>"""
     with open(os.path.join(HERE, "index.html"), "w") as f:

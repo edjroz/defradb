@@ -20,8 +20,15 @@ bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md
 <p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
 <b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
-doc-sync (one session per document), with identical payload. The asymptotic win
-needs M2's per-collection batching &mdash; see <code>tests/bench/reconcile/README.md</code>.</p>
+doc-sync (one session per document), with identical payload. <b>Charts 7&ndash;8</b>
+show M2's per-collection batching collapsing that per-document overhead back to
+~broadcast levels. <b>Chart&nbsp;9</b> is the payoff measured on real nodes: with one
+changed document in a growing collection, default doc-sync's control traffic rises
+with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
+reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
+the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
+always-on ordered-index write adds only a small per-commit overhead. See
+<code>tests/bench/reconcile/README.md</code>.</p>
 <figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/></figure>
 <figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/></figure>
 <figure><img src="plots/03_bytes_vs_d.svg" alt="03_bytes_vs_d.svg"/></figure>
@@ -30,4 +37,6 @@ needs M2's per-collection batching &mdash; see <code>tests/bench/reconcile/READM
 <figure><img src="plots/06_measured_round_trips.svg" alt="06_measured_round_trips.svg"/></figure>
 <figure><img src="plots/07_m2_round_trips.svg" alt="07_m2_round_trips.svg"/></figure>
 <figure><img src="plots/08_m2_control_bytes.svg" alt="08_m2_control_bytes.svg"/></figure>
+<figure><img src="plots/09_tinydiff_bytes_vs_docs.svg" alt="09_tinydiff_bytes_vs_docs.svg"/></figure>
+<figure><img src="plots/10_indexwrite_cost.svg" alt="10_indexwrite_cost.svg"/></figure>
 </body></html>

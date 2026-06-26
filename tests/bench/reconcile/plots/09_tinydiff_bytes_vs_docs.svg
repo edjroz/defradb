@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="470" fill="white"/>
+<text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes to sync ONE changed doc vs collection size (real nodes)</text>
+<text x="78" y="44" font-size="12" fill="#666">Default must enumerate every docID (control grows with the collection); reconciliation tracks the single-block diff and stays ~flat.</text>
+<line x1="78" y1="406.0" x2="630" y2="406.0" stroke="#e6e6e6"/>
+<text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">2KB</text>
+<line x1="78" y1="336.0" x2="630" y2="336.0" stroke="#e6e6e6"/>
+<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">3KB</text>
+<line x1="78" y1="266.0" x2="630" y2="266.0" stroke="#e6e6e6"/>
+<text x="70" y="270.0" font-size="11" fill="#444444" text-anchor="end">5KB</text>
+<line x1="78" y1="196.0" x2="630" y2="196.0" stroke="#e6e6e6"/>
+<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">6KB</text>
+<line x1="78" y1="126.0" x2="630" y2="126.0" stroke="#e6e6e6"/>
+<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">7KB</text>
+<line x1="78" y1="56.0" x2="630" y2="56.0" stroke="#e6e6e6"/>
+<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">8KB</text>
+<line x1="78.0" y1="56" x2="78.0" y2="406" stroke="#e6e6e6"/>
+<text x="78.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">50</text>
+<line x1="188.4" y1="56" x2="188.4" y2="406" stroke="#e6e6e6"/>
+<text x="188.4" y="424.0" font-size="11" fill="#444444" text-anchor="middle">80</text>
+<line x1="298.8" y1="56" x2="298.8" y2="406" stroke="#e6e6e6"/>
+<text x="298.8" y="424.0" font-size="11" fill="#444444" text-anchor="middle">110</text>
+<line x1="409.2" y1="56" x2="409.2" y2="406" stroke="#e6e6e6"/>
+<text x="409.2" y="424.0" font-size="11" fill="#444444" text-anchor="middle">140</text>
+<line x1="519.6" y1="56" x2="519.6" y2="406" stroke="#e6e6e6"/>
+<text x="519.6" y="424.0" font-size="11" fill="#444444" text-anchor="middle">170</text>
+<line x1="630.0" y1="56" x2="630.0" y2="406" stroke="#e6e6e6"/>
+<text x="630.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">200</text>
+<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
+<line x1="78" y1="406" x2="630" y2="406" stroke="#444444"/>
+<text x="354" y="452" font-size="12" fill="#222222" text-anchor="middle">collection size  (documents)</text>
+<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">control bytes</text>
+<polyline points="78.0,406.0 630.0,56.0" fill="none" stroke="#d1495b" stroke-width="2.5"/>
+<circle cx="78.0" cy="406.0" r="3.4" fill="#d1495b"/>
+<circle cx="630.0" cy="56.0" r="3.4" fill="#d1495b"/>
+<polyline points="78.0,375.9 630.0,270.8" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="78.0" cy="375.9" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="270.8" r="3.4" fill="#2e86ab"/>
+<line x1="646" y1="62" x2="668" y2="62" stroke="#d1495b" stroke-width="3"/>
+<text x="674" y="66" font-size="11.5" fill="#222222">default doc-sync</text>
+<line x1="646" y1="84" x2="668" y2="84" stroke="#2e86ab" stroke-width="3"/>
+<text x="674" y="88" font-size="11.5" fill="#222222">reconcile (M2)</text>
+<text x="78.0" y="397.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">2KB</text>
+<text x="630.0" y="47.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">8KB</text>
+<text x="78.0" y="366.9" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">3KB</text>
+<text x="630.0" y="261.8" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5KB</text>
+</svg>

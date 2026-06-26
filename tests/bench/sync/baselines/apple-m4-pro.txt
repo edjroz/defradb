@@ -1,0 +1,21 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/sourcenetwork/defradb/tests/bench/sync
+cpu: Apple M4 Pro
+Benchmark_Sync_OneDocChanged_docs50-14                       	       1	  60198583 ns/op	       722.0 blockBytes/op	         3.000 blocks/op	      2110 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.4241 heapDeltaMiB/op	        60.16 syncMs/op
+Benchmark_Sync_OneDocChanged_docs200-14                      	       1	  52949375 ns/op	       722.0 blockBytes/op	         3.000 blocks/op	      8410 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.8620 heapDeltaMiB/op	        52.93 syncMs/op
+Benchmark_Sync_ColdStart_docs10_upd0-14                      	       1	1298012458 ns/op	     12960 blockBytes/op	        60.00 blocks/op	      1509 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.004097 heapDeltaMiB/op	      1298 syncMs/op
+Benchmark_Sync_ColdStart_docs10_upd10-14                     	       1	7864235333 ns/op	     84960 blockBytes/op	       360.0 blocks/op	      1509 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.03221 heapDeltaMiB/op	      7864 syncMs/op
+Benchmark_Sync_ColdStart_docs50_upd0-14                      	       1	7195632416 ns/op	     64840 blockBytes/op	       300.0 blocks/op	      3190 ctrlBytes/op	         3.000 ctrlMsgs/op	         0.1040 heapDeltaMiB/op	      7196 syncMs/op
+Benchmark_Sync_IncrementalTail_docs10_base5_tail1-14         	       1	 640130876 ns/op	      7220 blockBytes/op	        30.00 blocks/op	       429.0 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.04974 heapDeltaMiB/op	       640.1 syncMs/op
+Benchmark_Sync_ManyHead_docs10_base5_k3-14                   	       1	1294658792 ns/op	     14910 blockBytes/op	        60.00 blocks/op	       429.0 ctrlBytes/op	         1.000 ctrlMsgs/op	         0.06970 heapDeltaMiB/op	      1295 syncMs/op
+Benchmark_LocalWrite_ReconcileOff_docs50_upd5-14             	       1	  87614416 ns/op	         1.444 heapDeltaMiB/op
+Benchmark_LocalWrite_ReconcileOn_docs50_upd5-14              	       1	  79379250 ns/op	         1.493 heapDeltaMiB/op
+Benchmark_Reconcile_ManyHead_docs10_base5_k3-14              	       1	2001222250 ns/op	     14910 blockBytes/op	        60.00 blocks/op	     18970 ctrlBytes/op	        42.00 ctrlMsgs/op	         0.3165 heapDeltaMiB/op	      2001 syncMs/op
+Benchmark_Reconcile_SingleDoc_base5_k3-14                    	       1	 202701751 ns/op	      1491 blockBytes/op	         6.000 blocks/op	      2869 ctrlBytes/op	         6.000 ctrlMsgs/op	        -0.08434 heapDeltaMiB/op	       202.7 syncMs/op
+Benchmark_Reconcile_Collection_ColdStart_docs10_upd0-14      	       1	1288355917 ns/op	     12960 blockBytes/op	        60.00 blocks/op	      2172 ctrlBytes/op	         4.000 ctrlMsgs/op	        -0.01637 heapDeltaMiB/op	      1288 syncMs/op
+Benchmark_Reconcile_Collection_ColdStart_docs50_upd0-14      	       1	6530815500 ns/op	     64840 blockBytes/op	       300.0 blocks/op	      3693 ctrlBytes/op	         4.000 ctrlMsgs/op	         0.1133 heapDeltaMiB/op	      6531 syncMs/op
+Benchmark_Reconcile_Collection_Tail_docs50_base2_tail1-14    	       1	3272482375 ns/op	     36100 blockBytes/op	       150.0 blocks/op	      6010 ctrlBytes/op	         4.000 ctrlMsgs/op	         0.2151 heapDeltaMiB/op	      3272 syncMs/op
+Benchmark_Reconcile_Collection_OneDocChanged_docs50-14       	       1	  54271751 ns/op	       722.0 blockBytes/op	         3.000 blocks/op	      2651 ctrlBytes/op	         2.000 ctrlMsgs/op	        -0.2340 heapDeltaMiB/op	        54.25 syncMs/op
+Benchmark_Reconcile_Collection_OneDocChanged_docs200-14      	       1	  46831376 ns/op	       722.0 blockBytes/op	         3.000 blocks/op	      4544 ctrlBytes/op	         4.000 ctrlMsgs/op	         0.007057 heapDeltaMiB/op	        46.81 syncMs/op
+PASS

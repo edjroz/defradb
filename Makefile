@@ -348,18 +348,27 @@ test\:bench-short:
 # Network P2P sync baselines. These start real libp2p nodes and are opt-in
 # (skipped in the default bench lane); see tests/bench/sync/README.md.
 # Covers the default-sync baselines, the set-reconciliation contrasts, and the
-# local index-write cost.
+# local index-write cost. We compile the test binary and run it directly (rather
+# than `go test`, which merges the binary's stderr into its own stdout) so the node
+# logs (corelog -> stderr) stay off the benchmark result stream.
+SYNC_BENCH_RE := Benchmark_(Sync|Reconcile|LocalWrite)
 .PHONY: test\:bench-sync
 test\:bench-sync:
-	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench 'Benchmark_(Sync|Reconcile|LocalWrite)' -benchtime=1x -timeout=30m
+	@go test -c -o /tmp/defra-sync.test ./tests/bench/sync/
+	DEFRA_BENCH_SYNC=1 /tmp/defra-sync.test -test.run='^$$' -test.bench='$(SYNC_BENCH_RE)' -test.benchtime=1x -test.timeout=30m
+	@rm -f /tmp/defra-sync.test
 
 # Same suite, saved to a per-device baseline for cross-tier comparison with
 # benchstat. Override the device label: `make test:bench-sync-save DEVICE=apple-m4-pro`.
+# Node logs go to a sidecar .stderr.log so the saved .txt is clean + benchstat-parseable.
 DEVICE ?= $(shell uname -m)
 .PHONY: test\:bench-sync-save
 test\:bench-sync-save:
 	@mkdir -p tests/bench/sync/baselines
-	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench 'Benchmark_(Sync|Reconcile|LocalWrite)' -benchtime=1x -timeout=30m | tee tests/bench/sync/baselines/$(DEVICE).txt
+	@go test -c -o /tmp/defra-sync.test ./tests/bench/sync/
+	DEFRA_BENCH_SYNC=1 /tmp/defra-sync.test -test.run='^$$' -test.bench='$(SYNC_BENCH_RE)' -test.benchtime=1x -test.timeout=30m \
+		2> tests/bench/sync/baselines/$(DEVICE).stderr.log | tee tests/bench/sync/baselines/$(DEVICE).txt
+	@rm -f /tmp/defra-sync.test
 
 .PHONY: test\:scripts
 test\:scripts:

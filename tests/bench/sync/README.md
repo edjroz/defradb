@@ -94,6 +94,12 @@ make test:bench-sync-save DEVICE=apple-m4-pro
 # → tests/bench/sync/baselines/apple-m4-pro.txt
 ```
 
+The target compiles the test binary and runs it directly rather than via `go
+test`: `go test` merges the test binary's stderr into its own stdout, which would
+splice node logs (corelog → stderr) into the benchmark result lines. Running the
+binary keeps the streams separate — node logs go to `baselines/<device>.stderr.log`
+and only result lines land in the `.txt`.
+
 `DEVICE` defaults to `uname -m`. `make deps:bench` installs `benchstat`; compare
 across phases/devices (an ARM tier matrix — there is no x86 hardware in scope):
 

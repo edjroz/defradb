@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="470" fill="white"/>
+<text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Local write cost with reconciliation off vs on (real node)</text>
+<text x="78" y="44" font-size="12" fill="#666">Seeding 50 docs x 5 updates; the extra per-commit ordered-index write adds ~5%.</text>
+<line x1="78" y1="406.0" x2="660" y2="406.0" stroke="#e6e6e6"/>
+<text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">0ms</text>
+<line x1="78" y1="336.0" x2="660" y2="336.0" stroke="#e6e6e6"/>
+<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">16ms</text>
+<line x1="78" y1="266.0" x2="660" y2="266.0" stroke="#e6e6e6"/>
+<text x="70" y="270.0" font-size="11" fill="#444444" text-anchor="end">32ms</text>
+<line x1="78" y1="196.0" x2="660" y2="196.0" stroke="#e6e6e6"/>
+<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">48ms</text>
+<line x1="78" y1="126.0" x2="660" y2="126.0" stroke="#e6e6e6"/>
+<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">64ms</text>
+<line x1="78" y1="56.0" x2="660" y2="56.0" stroke="#e6e6e6"/>
+<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">80ms</text>
+<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
+<line x1="78" y1="406" x2="660" y2="406" stroke="#444444"/>
+<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">write time per op (ms, lower is better)</text>
+<rect x="143.5" y="71.4" width="160.1" height="334.6" fill="#d1495b"/>
+<text x="223.5" y="64.4" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">76ms</text>
+<text x="223.5" y="424.0" font-size="11" fill="#222222" text-anchor="middle">reconciliation off</text>
+<rect x="434.5" y="56.0" width="160.1" height="350.0" fill="#2e86ab"/>
+<text x="514.5" y="49.0" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">80ms</text>
+<text x="514.5" y="424.0" font-size="11" fill="#222222" text-anchor="middle">reconciliation on</text>
+</svg>
