@@ -210,6 +210,11 @@ func Benchmark_Reconcile_Collection_OneDocChanged_docs50(b *testing.B) {
 	runReconcileCollectionOneDocChanged(b, 50)
 }
 
+// One divergent doc in a 100-doc collection (the curve's midpoint).
+func Benchmark_Reconcile_Collection_OneDocChanged_docs100(b *testing.B) {
+	runReconcileCollectionOneDocChanged(b, 100)
+}
+
 // One divergent doc in a 200-doc collection: the crossover point where the
 // reconcile control cost (flat in docCount) is well below the default broadcast's
 // (which lists all 200 docIDs). Heavier setup, so run with -benchtime=1x.

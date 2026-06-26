@@ -137,6 +137,19 @@ blocks, blockBytes, wallMs, rounds, converged`
   round-trips, where reconciliation's fewer rounds matter more. `ctrlBytes` /
   `ctrlMsgs` are the device-independent metrics.
 
+## Known limitation: large cold transfers (push direction)
+
+The orchestrator drives `ReconcileCollection` from one endpoint per edge, which
+uses the manual API's **bidirectional push**. Pushing a *large cold* set (e.g. a
+100+ doc base to an empty peer) can fail, whereas reconciling *into* the empty peer
+(pull) succeeds at the same size — the in-process benchmarks in `tests/bench/sync`
+(which reconcile pull-side) handle 200+ docs fine and are the **authoritative
+multi-size measurement**. So this tool reliably measures the steady-state win at
+the `pair` / tiny-diff scale (validated on real hardware), while the in-process
+crossover curve (`tests/bench/reconcile` chart 9) supplies the size sweep. Driving
+reconciliation from the node that is *behind* (pull) to make the cross-device
+size-sweep robust is a follow-up.
+
 ## Files
 
 - `cmd/benchnode/main.go` — the instrumented node + HTTP control API.

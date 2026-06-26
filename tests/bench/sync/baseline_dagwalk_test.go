@@ -174,6 +174,7 @@ func runSyncOneDocChanged(b *testing.B, docCount int) {
 // Default-broadcast contrasts to the OneDocChanged reconcile benchmarks. Run the
 // docs200 case with -benchtime=1x.
 func Benchmark_Sync_OneDocChanged_docs50(b *testing.B)  { runSyncOneDocChanged(b, 50) }
+func Benchmark_Sync_OneDocChanged_docs100(b *testing.B) { runSyncOneDocChanged(b, 100) }
 func Benchmark_Sync_OneDocChanged_docs200(b *testing.B) { runSyncOneDocChanged(b, 200) }
 
 // sampleReceiver snapshots the receiver's counters and blockstore growth.

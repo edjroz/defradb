@@ -288,13 +288,21 @@ def seed_scenario(scenario, nodes, edges, docs, settle, max_rounds):
 
 
 def _untimed_base(nodes, edges, all_docids, max_rounds, settle):
-    """Bring all nodes to the same base, mode-agnostically: try reconcile per edge,
-    fall back to default sync. Stops when blockstores equalise."""
+    """Bring all nodes to the same base (untimed setup). Reconciles BOTH directions
+    per edge so the node that is behind pulls — a large cold transfer pushed from the
+    data-holder can fail, but pulling into the empty node succeeds. Falls back to
+    default sync when neither endpoint speaks reconciliation. Stops when blockstores
+    equalise."""
     for _ in range(max_rounds):
         for i, j in edges:
-            try:
-                nodes[i].post("/reconcile", {"peerID": nodes[j].peer_id, "collection": COLLECTION})
-            except urllib.error.HTTPError:
+            reconciled = False
+            for a, b in ((i, j), (j, i)):
+                try:
+                    nodes[a].post("/reconcile", {"peerID": nodes[b].peer_id, "collection": COLLECTION})
+                    reconciled = True
+                except urllib.error.HTTPError:
+                    pass  # large cold push may 500; the reverse direction (pull) converges this edge
+            if not reconciled:  # default-mode nodes: no reconcile protocol -> pull via sync
                 nodes[i].post("/sync", {"collection": COLLECTION, "docIDs": all_docids})
                 nodes[j].post("/sync", {"collection": COLLECTION, "docIDs": all_docids})
         time.sleep(settle)

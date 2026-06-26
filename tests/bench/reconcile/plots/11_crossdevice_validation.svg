@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="470" fill="white"/>
+<text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Cross-device validation — real Mac mini ↔ MacBook over LAN</text>
+<text x="78" y="44" font-size="12" fill="#666">Network total control bytes to converge one changed doc (50-doc collection). The in-process win reproduces end-to-end across two physical machines.</text>
+<line x1="78" y1="406.0" x2="660" y2="406.0" stroke="#e6e6e6"/>
+<text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">0B</text>
+<line x1="78" y1="336.0" x2="660" y2="336.0" stroke="#e6e6e6"/>
+<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">4KB</text>
+<line x1="78" y1="266.0" x2="660" y2="266.0" stroke="#e6e6e6"/>
+<text x="70" y="270.0" font-size="11" fill="#444444" text-anchor="end">7KB</text>
+<line x1="78" y1="196.0" x2="660" y2="196.0" stroke="#e6e6e6"/>
+<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">11KB</text>
+<line x1="78" y1="126.0" x2="660" y2="126.0" stroke="#e6e6e6"/>
+<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">14KB</text>
+<line x1="78" y1="56.0" x2="660" y2="56.0" stroke="#e6e6e6"/>
+<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">18KB</text>
+<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
+<line x1="78" y1="406" x2="660" y2="406" stroke="#444444"/>
+<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">network control bytes (both nodes)</text>
+<rect x="143.5" y="56.0" width="160.1" height="350.0" fill="#d1495b"/>
+<text x="223.5" y="49.0" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">18KB</text>
+<text x="223.5" y="424.0" font-size="11" fill="#222222" text-anchor="middle">default doc-sync</text>
+<rect x="434.5" y="238.9" width="160.1" height="167.1" fill="#2e86ab"/>
+<text x="514.5" y="231.9" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">9KB</text>
+<text x="514.5" y="424.0" font-size="11" fill="#222222" text-anchor="middle">reconcile (M2)</text>
+</svg>

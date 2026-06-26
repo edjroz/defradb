@@ -27,8 +27,13 @@ changed document in a growing collection, default doc-sync's control traffic ris
 with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
 reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
 the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
-always-on ordered-index write adds only a small per-commit overhead. See
-<code>tests/bench/reconcile/README.md</code>.</p>
+always-on ordered-index write adds only a small per-commit overhead.
+<b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
+LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
+collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
+default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
+devices. See <code>tests/bench/reconcile/README.md</code> and
+<code>tests/bench/crossdevice/</code>.</p>
 <figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/></figure>
 <figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/></figure>
 <figure><img src="plots/03_bytes_vs_d.svg" alt="03_bytes_vs_d.svg"/></figure>
@@ -39,4 +44,5 @@ always-on ordered-index write adds only a small per-commit overhead. See
 <figure><img src="plots/08_m2_control_bytes.svg" alt="08_m2_control_bytes.svg"/></figure>
 <figure><img src="plots/09_tinydiff_bytes_vs_docs.svg" alt="09_tinydiff_bytes_vs_docs.svg"/></figure>
 <figure><img src="plots/10_indexwrite_cost.svg" alt="10_indexwrite_cost.svg"/></figure>
+<figure><img src="plots/11_crossdevice_validation.svg" alt="11_crossdevice_validation.svg"/></figure>
 </body></html>

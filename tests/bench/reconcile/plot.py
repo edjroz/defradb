@@ -408,6 +408,30 @@ def main():
             ],
             ylog=False, yfmt=lambda v: f"{v:.0f}ms"))
 
+    # 11. Cross-device, real hardware: the tiny-diff win measured end-to-end between
+    # two physical Macs (Mac mini <-> MacBook) over a LAN. Network total to converge
+    # one changed doc in a 50-doc collection — the same contrast as chart 9, now off
+    # the bench. (tests/bench/crossdevice/)
+    xd_path = os.path.join(HERE, "data", "measured_crossdevice.csv")
+    if os.path.exists(xd_path):
+        with open(xd_path, newline="") as f:
+            xd = {r["approach"]: r for r in csv.DictReader(f)}
+
+        def xdv(approach):
+            return float(xd[approach]["net_ctrl_bytes"]) if approach in xd else 0.0
+
+        written.append(bar_chart(
+            "11_crossdevice_validation.svg",
+            "Cross-device validation — real Mac mini ↔ MacBook over LAN",
+            "Network total control bytes to converge one changed doc (50-doc collection). "
+            "The in-process win reproduces end-to-end across two physical machines.",
+            "network control bytes (both nodes)",
+            [
+                ("default doc-sync", xdv("default_sync"), BASELINE_COLOR),
+                ("reconcile (M2)", xdv("reconcile"), NG_COLOR),
+            ],
+            ylog=False, yfmt=fmt_bytes))
+
     # index.html
     cards = "\n".join(
         f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
@@ -440,8 +464,13 @@ changed document in a growing collection, default doc-sync's control traffic ris
 with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
 reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
 the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
-always-on ordered-index write adds only a small per-commit overhead. See
-<code>tests/bench/reconcile/README.md</code>.</p>
+always-on ordered-index write adds only a small per-commit overhead.
+<b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
+LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
+collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
+default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
+devices. See <code>tests/bench/reconcile/README.md</code> and
+<code>tests/bench/crossdevice/</code>.</p>
 {cards}
 </body></html>"""
     with open(os.path.join(HERE, "index.html"), "w") as f:
