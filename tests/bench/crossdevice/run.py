@@ -113,7 +113,8 @@ def _repo_root():
     return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 
-def provision_local(n, reconciliation, binary, control_base=7000, p2p_base=9300):
+# Control port base avoids 7000/7100 (macOS AirPlay Receiver / Control Center).
+def provision_local(n, reconciliation, binary, control_base=17700, p2p_base=9300):
     """Spawn n benchnode subprocesses locally on distinct fixed ports."""
     nodes = []
     for i in range(n):
@@ -127,7 +128,7 @@ def provision_local(n, reconciliation, binary, control_base=7000, p2p_base=9300)
     return nodes
 
 
-def provision_ssh(hosts, reconciliation, binary, control_port=7000, p2p_base=9300):
+def provision_ssh(hosts, reconciliation, binary, control_port=17700, p2p_base=9300):
     """Launch benchnode on each ssh host. The binary must already exist on the
     remote at `binary` (cross-compiled for the remote GOOS/GOARCH and copied over,
     e.g. via scp) — see README. Each remote node binds its control API and p2p on
@@ -147,6 +148,15 @@ def provision_ssh(hosts, reconciliation, binary, control_port=7000, p2p_base=930
     return nodes
 
 
+def provision_node(specs, reconciliation):
+    """Connect to bench-nodes already running at the given (host, port) control
+    endpoints — no launch, no teardown (the operator manages their lifecycle).
+    The operator must have started them with the matching --reconciliation flag for
+    the mode being run (a reconciliation node auto-reconciles on connect, which
+    would contaminate a 'default' measurement)."""
+    return [Node(i, f"http://{h}:{p}") for i, (h, p) in enumerate(specs)]
+
+
 def teardown(nodes):
     for nd in nodes:
         if nd.proc is not None:
@@ -158,7 +168,8 @@ def teardown(nodes):
             except subprocess.TimeoutExpired:
                 nd.proc.kill()
         if nd.ssh_host is not None:
-            subprocess.run(["ssh", nd.ssh_host, "pkill", "-f", "benchnode"],
+            # '[b]enchnode' so the remote pkill pattern does not match its own shell.
+            subprocess.run(["ssh", nd.ssh_host, "pkill", "-f", "[b]enchnode"],
                            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
@@ -301,6 +312,10 @@ def run_mode(mode, n, edges, scenario, docs, binary, devices, settle, max_rounds
     kind, spec = devices
     if kind == "local":
         nodes = provision_local(n, reconciliation, binary)
+    elif kind == "node":
+        if len(spec) < n:
+            raise RuntimeError(f"topology needs {n} nodes but only {len(spec)} node endpoints given")
+        nodes = provision_node(spec[:n], reconciliation)
     else:
         if len(spec) < n:
             raise RuntimeError(f"topology needs {n} nodes but only {len(spec)} ssh hosts given")
@@ -339,7 +354,14 @@ def parse_devices(s):
         return ("local", int(s.split(":", 1)[1]))
     if s.startswith("ssh:"):
         return ("ssh", s.split(":", 1)[1].split(","))
-    raise ValueError("--devices must be local:N or ssh:host,host,...")
+    if s.startswith("node:"):
+        # node:host:port,host:port — connect to already-running bench-nodes.
+        specs = []
+        for hp in s.split(":", 1)[1].split(","):
+            h, p = hp.rsplit(":", 1)
+            specs.append((h, int(p)))
+        return ("node", specs)
+    raise ValueError("--devices must be local:N, ssh:host,..., or node:host:port,...")
 
 
 def main():
@@ -365,7 +387,8 @@ def main():
         topo_name = args.topology
 
     devices = parse_devices(args.devices)
-    binary = args.binary or build_benchnode()
+    # node: mode connects to already-running nodes, so no binary is needed.
+    binary = args.binary or (None if devices[0] == "node" else build_benchnode())
     modes = [m.strip() for m in args.modes.split(",") if m.strip()]
 
     label = f"{topo_name}-n{n}-{args.scenario}-docs{args.docs}"

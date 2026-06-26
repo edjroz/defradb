@@ -31,9 +31,13 @@ Three orthogonal inputs, so new shapes are added by config, not code:
 
 | Input | Flag | Values |
 |---|---|---|
-| **Placement** — where nodes run | `--devices` | `local:N` (spawn N locally) · `ssh:hostA,hostB,...` (one node per host) |
+| **Placement** — where nodes run | `--devices` | `local:N` (spawn N locally) · `ssh:hostA,hostB,...` (launch one node per host over SSH) · `node:host:port,...` (connect to bench-nodes you already started) |
 | **Topology** — the graph they form | `--topology` / `--topology-file` | `pair` `line` `ring` `star` `mesh` `tree:<fanout>` · or a `{nodes,edges,seeds}` JSON |
 | **Scenario** — how data diverges | `--scenario` | `cold-start` `tiny-diff` `multi-writer` |
+
+Nodes use **control port 17700** and **p2p port 9300**. (Control is deliberately
+*not* 7000/7100 — macOS AirPlay Receiver / Control Center owns those, and a node
+trying to bind 7000 fails with "address already in use".)
 
 The node count comes from the topology; placement supplies that many endpoints.
 The orchestrator (`run.py`) wires the nodes into the topology, applies the
@@ -64,24 +68,45 @@ python3 tests/bench/crossdevice/run.py --devices local:3 --topology line  --scen
 Each run writes `results/<topology>-n<N>-<scenario>-docs<D>.csv` (one row per node)
 and prints a summary comparing the modes.
 
-### Across real devices (SSH)
+### Across real devices
+
+Prerequisites on each device: passwordless SSH from the orchestrator host, the
+`benchnode` binary at the same path on every device (build natively per device, or
+cross-compile + `scp`), and the control (17700) + p2p (9300) ports reachable. On
+macOS there is no per-port firewall — just make sure the **Application Firewall**
+(System Settings → Network → Firewall) isn't blocking `benchnode`; on a same-LAN
+setup with the firewall off there is nothing to open. Each node must be **awake**
+(an asleep Mac answers ping/ARP but drops SSH/TCP).
 
 ```sh
-# 1. cross-compile the node for each device's GOOS/GOARCH and copy it over, e.g.
-GOOS=darwin GOARCH=arm64 go build -o benchnode ./tests/bench/crossdevice/cmd/benchnode
-scp benchnode user@deviceA:~/benchnode    # repeat per device
+# build per device (same path on each), e.g. on each host:
+#   git checkout feat/... && go build -o ~/benchnode ./tests/bench/crossdevice/cmd/benchnode
 
-# 2. ensure each device's p2p port (tcp 9300+) and control port (tcp 7000) are
-#    reachable from the orchestrator and between devices (NAT/firewall).
-
-# 3. drive them (node count comes from the topology; supply that many hosts):
+# auto-launch over SSH (node count comes from the topology; supply that many hosts):
 python3 tests/bench/crossdevice/run.py \
     --devices ssh:user@deviceA,user@deviceB,user@deviceC \
     --topology line --scenario tiny-diff --docs 200 --binary ~/benchnode
 ```
 
+Each mode (`ranges`, `default`) needs its node set started with the matching
+`--reconciliation` flag; in `ssh` mode `run.py` handles that automatically.
+
+**`node:` mode (pre-launched).** When you'd rather manage node lifecycles yourself
+(or the orchestrator can't reliably SSH-launch in your environment), start the
+bench-nodes by hand and point `run.py` at their control endpoints — it then only
+talks HTTP, no SSH:
+
+```sh
+# start a node on each host with the flag for the mode you're measuring:
+#   ranges  -> ~/benchnode --control 0.0.0.0:17700 --p2p /ip4/0.0.0.0/tcp/9300 --store memory --reconciliation
+#   default -> same, WITHOUT --reconciliation  (a reconciliation node auto-reconciles on connect)
+python3 tests/bench/crossdevice/run.py \
+    --devices node:hostA:17700,hostB:17700 \
+    --topology pair --scenario tiny-diff --docs 50 --modes ranges    # then relaunch w/o the flag and --modes default
+```
+
 The scope here is **ARM-only** (Apple-Silicon devices); x86_64 is deferred to the
-team. The orchestrator code path is identical to `local:N` — only provisioning
+team. The orchestrator code path is identical across placements — only provisioning
 differs.
 
 ## CSV columns

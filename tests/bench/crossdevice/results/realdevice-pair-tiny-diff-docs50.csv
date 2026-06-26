@@ -1,0 +1,5 @@
+topology,N,scenario,mode,nodeID,ctrlBytesSent,ctrlBytesRecv,ctrlMsgs,blocks,blockBytes,wallMs,rounds,converged
+pair,2,tiny-diff,ranges,0,1185,2505,4,307,65818,98.4,1,True
+pair,2,tiny-diff,ranges,1,3713,1185,6,307,65818,98.4,1,True
+pair,2,tiny-diff,default,0,6882,2110,3,307,65818,1616.4,1,True
+pair,2,tiny-diff,default,1,6882,2110,3,307,65818,1616.4,1,True
