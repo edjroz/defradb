@@ -14,11 +14,17 @@ import (
 	"context"
 
 	"github.com/ipfs/go-cid"
+	"github.com/ipld/go-ipld-prime/linking"
+	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
+
+	"github.com/sourcenetwork/corekv"
 
 	"github.com/sourcenetwork/defradb/client"
 	"github.com/sourcenetwork/defradb/client/options"
+	"github.com/sourcenetwork/defradb/errors"
 	"github.com/sourcenetwork/defradb/internal/core"
 	coreblock "github.com/sourcenetwork/defradb/internal/core/block"
+	dbid "github.com/sourcenetwork/defradb/internal/db/id"
 	"github.com/sourcenetwork/defradb/internal/db/p2p/negentropy"
 	"github.com/sourcenetwork/defradb/internal/db/p2p/protocol"
 	iIdentity "github.com/sourcenetwork/defradb/internal/identity"
@@ -42,22 +48,30 @@ func (proc *reconcileCommProcessor) ProcessRequest(
 	ctx context.Context,
 	req protocol.ReconcileMessage,
 ) (protocol.ReconcileMessage, error) {
-	if req.Scope.Kind != protocol.ScopeDocHeads {
-		return protocol.ReconcileMessage{}, NewErrUnsupportedReconcileScope(req.Scope.Kind)
-	}
-
 	// The inbound stream handler hands us a context.Background(); bound the local
 	// read so a slow store cannot pin the stream open. (Full context plumbing
 	// from the stream handler is a later milestone.)
 	ctx, cancel := context.WithTimeout(ctx, networkRequestTimeout)
 	defer cancel()
 
-	local, err := proc.p2p.localVectorForDoc(ctx, req.Scope.ID)
+	local, err := proc.p2p.localVectorForScope(ctx, req.Scope)
 	if err != nil {
 		return protocol.ReconcileMessage{}, err
 	}
 
 	return respondReconcile(local, req)
+}
+
+// localVectorForScope builds the local reconciliation set for a scope.
+func (p *P2P) localVectorForScope(ctx context.Context, scope protocol.ReconcileScope) (*negentropy.Vector, error) {
+	switch scope.Kind {
+	case protocol.ScopeDocHeads:
+		return p.localVectorForDoc(ctx, scope.ID)
+	case protocol.ScopeCollectionBlocks:
+		return p.localVectorForCollection(ctx, scope.ID)
+	default:
+		return nil, NewErrUnsupportedReconcileScope(scope.Kind)
+	}
 }
 
 // respondReconcile answers one reconcile request from a local set, translating in
@@ -101,6 +115,52 @@ func vectorFromCIDs(cids []cid.Cid) (*negentropy.Vector, error) {
 	builder := negentropy.NewVectorBuilder(len(cids))
 	for _, c := range cids {
 		builder.Add(0, c.Bytes())
+	}
+	return builder.Build()
+}
+
+// collectionShortID resolves a collectionID to its local short ID via the
+// systemstore (no transaction required).
+func (p *P2P) collectionShortID(ctx context.Context, collectionID string) (uint32, error) {
+	return dbid.GetUncachedShortCollectionID(ctx, collectionID, p.db.Multistore().Systemstore())
+}
+
+// localVectorForCollection builds the reconciliation set for a collection: every
+// composite block CID recorded in the maintained reconcile index, ordered by real
+// CRDT height then CID. Both peers store the same (height, cid) per shared block, so
+// the sort keys agree cross-peer.
+func (p *P2P) localVectorForCollection(ctx context.Context, collectionID string) (*negentropy.Vector, error) {
+	shortID, err := p.collectionShortID(ctx, collectionID)
+	if err != nil {
+		return nil, err
+	}
+
+	iter, err := p.db.Multistore().ReconcileIndex().Iterator(ctx, corekv.IterOptions{
+		Prefix:   keys.ReconcileIndexScopePrefix(shortID),
+		KeysOnly: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	builder := negentropy.NewVectorBuilder(0)
+	for {
+		hasNext, err := iter.Next()
+		if err != nil {
+			return nil, errors.Join(err, iter.Close())
+		}
+		if !hasNext {
+			break
+		}
+		height, cidBytes, ok := keys.ReconcileIndexEntry(iter.Key())
+		if !ok {
+			continue
+		}
+		// Copy: the iterator may reuse the key buffer across Next calls.
+		builder.Add(height, append([]byte(nil), cidBytes...))
+	}
+	if err := iter.Close(); err != nil {
+		return nil, err
 	}
 	return builder.Build()
 }
@@ -176,6 +236,152 @@ func (p *P2P) ReconcileDocument(
 		return err
 	}
 	return p.pushReconcileHave(sessionCtx, peerID, collectionID, docID, it.Have())
+}
+
+// ReconcileCollection runs a range-based set reconciliation session against peerID
+// over the full set of composite block CIDs in a collection, then converges the
+// local node by fetching the blocks it is missing and merging them. This is the
+// O(diff) cold-start/catch-up path: the missing block set is discovered up front and
+// fetched directly, so no full-DAG walk is required.
+//
+// It is pull-only: the local (initiating) node converges; the peer converges when it
+// runs its own ReconcileCollection. Reconciliation only discovers the divergent CIDs
+// — causal validation stays with the existing merge.
+func (p *P2P) ReconcileCollection(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+) error {
+	if p.reconcileProtocol == nil {
+		return ErrSetReconciliationDisabled
+	}
+
+	cols, err := p.db.GetCollections(
+		ctx,
+		options.WithIdentity(
+			options.GetCollections().SetCollectionName(collectionName),
+			iIdentity.FromContext(ctx),
+		),
+	)
+	if err != nil {
+		return err
+	}
+	if len(cols) == 0 {
+		return client.NewErrCollectionNotFoundForName(collectionName)
+	}
+	collectionID := cols[0].Version().CollectionID
+
+	sessionCtx, cancel := context.WithTimeout(ctx, reconcileSessionTimeout)
+	defer cancel()
+
+	local, err := p.localVectorForCollection(sessionCtx, collectionID)
+	if err != nil {
+		return err
+	}
+
+	scope := protocol.ReconcileScope{Kind: protocol.ScopeCollectionBlocks, ID: collectionID}
+	it := negentropy.NewInitiator(local)
+	msg := it.Initiate()
+
+	for {
+		reply, err := p.reconcileRound(sessionCtx, peerID, scope, msg)
+		if err != nil {
+			return err
+		}
+
+		incoming, err := protocol.FromWire(reply)
+		if err != nil {
+			return err
+		}
+
+		next, done := it.Reconcile(incoming)
+		if it.Err() != nil {
+			return it.Err()
+		}
+		if done {
+			break
+		}
+		msg = next
+	}
+
+	return p.fetchAndMergeCollectionNeed(sessionCtx, peerID, collectionID, it.Need())
+}
+
+// fetchedComposite captures the metadata of a fetched composite block needed to
+// compute merge tips and issue per-document merges.
+type fetchedComposite struct {
+	cid   cid.Cid
+	docID string
+}
+
+// fetchAndMergeCollectionNeed fetches each missing composite block directly by CID
+// (no DAG walk), persists it, then merges from the "tips" of the fetched set — the
+// blocks not referenced as a parent by any other fetched block. In a Merkle-CRDT,
+// lacking a parent implies lacking all its descendants, so the need-set's tips are
+// exactly the peer's new heads; merging from them walks the now-local blocks
+// parent-first via the existing merge.
+func (p *P2P) fetchAndMergeCollectionNeed(
+	ctx context.Context,
+	peerID, collectionID string,
+	need [][]byte,
+) error {
+	if len(need) == 0 {
+		return nil
+	}
+
+	sessionCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	sessionCtx = p.host.ContextWithSession(sessionCtx)
+	linkSys := makeLinkSystem(p.host.IPLDStore())
+
+	blocks := make([]fetchedComposite, 0, len(need))
+	referenced := make(map[string]struct{}) // composite CIDs that are some block's parent
+
+	for _, idBytes := range need {
+		c, err := cid.Cast(idBytes)
+		if err != nil {
+			return err
+		}
+
+		nd, err := linkSys.Load(linking.LinkContext{Ctx: sessionCtx}, cidlink.Link{Cid: c}, coreblock.BlockSchemaPrototype)
+		if err != nil {
+			return err
+		}
+		block, err := coreblock.GetFromNode(nd)
+		if err != nil {
+			return err
+		}
+		if block.Signature != nil {
+			if _, err := coreblock.VerifyBlockSignature(block, &linkSys); err != nil {
+				return NewErrVerifyBlockSig(err)
+			}
+		}
+		// Persist the fetched block so the subsequent merge walks it locally.
+		if _, err := linkSys.Store(linking.LinkContext{Ctx: sessionCtx}, coreblock.GetLinkPrototype(), block.GenerateNode()); err != nil {
+			return NewErrStoreBlockDAGSync(err)
+		}
+
+		for _, h := range block.Heads {
+			parentCID := h.Cid
+			referenced[string(parentCID.Bytes())] = struct{}{}
+		}
+		blocks = append(blocks, fetchedComposite{cid: c, docID: string(block.Delta.GetDocID())})
+	}
+
+	for _, b := range blocks {
+		if _, isParent := referenced[string(b.cid.Bytes())]; isParent {
+			continue // not a tip — it will be reached by the merge walk from a tip
+		}
+		// syncDocumentAndMerge walks the tip's DAG (all links, including field
+		// blocks) via the network link system, fetching what is missing and
+		// stopping at already-merged blocks, then merges. The composite blocks are
+		// already local from the pre-fetch above, so only the field blocks for the
+		// divergent sub-DAG are fetched here — keeping it diff-proportional.
+		if err := p.syncDocumentAndMerge(sessionCtx, peerID, collectionID, b.docID, b.cid); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // reconcileRound performs one request/reply round, bounded by a per-round timeout.

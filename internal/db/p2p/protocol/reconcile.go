@@ -18,8 +18,12 @@ import (
 // Reconcile scope kinds. The kind selects which set a session reconciles.
 const (
 	// ScopeDocHeads reconciles a single document's composite heads, keyed by ID
-	// (the docID). It is the only scope in the M1 (heads-only) slice.
+	// (the docID). It is the M1 (heads-only) scope.
 	ScopeDocHeads uint8 = 1
+	// ScopeCollectionBlocks reconciles the full set of composite block CIDs in a
+	// collection, keyed by ID (the collectionID). It is the M2 (full-block-set)
+	// scope that gives O(diff) cold-start.
+	ScopeCollectionBlocks uint8 = 2
 )
 
 // ReconcileScope identifies the set being reconciled in a session.
