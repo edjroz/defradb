@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Negentropy vs default sync — control-traffic comparison</title>
+<style>
+ body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;color:#222;line-height:1.5}
+ h1{font-size:24px} figure{margin:24px 0;text-align:center} img{max-width:100%;border:1px solid #eee;border-radius:8px}
+ code{background:#f4f4f4;padding:1px 5px;border-radius:4px}
+ .take{background:#f6f9f7;border-left:4px solid #3c8c5a;padding:12px 16px;border-radius:6px}
+</style></head><body>
+<h1>Range-based set reconciliation vs default sync</h1>
+<p class="take"><b>The case in one line:</b> to discover a tiny difference inside a large
+set, the default sync must communicate the whole set (O(n) control bytes), while
+negentropy narrows in on just the difference (O(d&middot;log&nbsp;n)) — a
+<b>188&times; control-traffic reduction at n=100k</b> for a 2-item difference, at the
+cost of a few extra logarithmic round-trips.</p>
+<p>Negentropy numbers are measured directly from the Phase-2 engine
+(<code>internal/db/p2p/negentropy</code>); the default-sync baseline is modelled as a
+naive full-identifier exchange at the same per-item accounting — a generous lower
+bound on what the real DAG-walk costs. See <code>README.md</code> for methodology.</p>
+<p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
+<b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
+per-document scale reconciliation costs <i>more</i> control traffic than broadcast
+doc-sync (one session per document), with identical payload. The asymptotic win
+needs M2's per-collection batching &mdash; see <code>README.md</code>.</p>
+<figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/></figure>
+<figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/></figure>
+<figure><img src="plots/03_bytes_vs_d.svg" alt="03_bytes_vs_d.svg"/></figure>
+<figure><img src="plots/04_rounds_vs_n.svg" alt="04_rounds_vs_n.svg"/></figure>
+<figure><img src="plots/05_measured_control_bytes.svg" alt="05_measured_control_bytes.svg"/></figure>
+<figure><img src="plots/06_measured_round_trips.svg" alt="06_measured_round_trips.svg"/></figure>
+</body></html>

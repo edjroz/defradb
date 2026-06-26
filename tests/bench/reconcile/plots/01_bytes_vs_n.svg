@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="470" fill="white"/>
+<text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control traffic to find a 2-item difference</text>
+<text x="78" y="44" font-size="12" fill="#666">Symmetric difference fixed at d=2; only the set size n grows. Log-log axes.</text>
+<line x1="78" y1="340.0" x2="630" y2="340.0" stroke="#e6e6e6"/>
+<text x="70" y="344.0" font-size="11" fill="#444444" text-anchor="end">10KB</text>
+<line x1="78" y1="227.2" x2="630" y2="227.2" stroke="#e6e6e6"/>
+<text x="70" y="231.2" font-size="11" fill="#444444" text-anchor="end">100KB</text>
+<line x1="78" y1="114.5" x2="630" y2="114.5" stroke="#e6e6e6"/>
+<text x="70" y="118.5" font-size="11" fill="#444444" text-anchor="end">1.0MB</text>
+<line x1="261.5" y1="56" x2="261.5" y2="406" stroke="#e6e6e6"/>
+<text x="261.5" y="424.0" font-size="11" fill="#444444" text-anchor="middle">1k</text>
+<line x1="445.7" y1="56" x2="445.7" y2="406" stroke="#e6e6e6"/>
+<text x="445.7" y="424.0" font-size="11" fill="#444444" text-anchor="middle">10k</text>
+<line x1="630.0" y1="56" x2="630.0" y2="406" stroke="#e6e6e6"/>
+<text x="630.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">100k</text>
+<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
+<line x1="78" y1="406" x2="630" y2="406" stroke="#444444"/>
+<text x="354" y="452" font-size="12" fill="#222222" text-anchor="middle">set size  n  (items, log scale)</text>
+<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">control bytes (log scale)</text>
+<polyline points="78.0,392.8 165.4,340.0 261.5,281.4 349.4,227.7 445.7,168.7 533.7,115.0 630.0,56.0" fill="none" stroke="#d1495b" stroke-width="2.5"/>
+<circle cx="78.0" cy="392.8" r="3.4" fill="#d1495b"/>
+<circle cx="165.4" cy="340.0" r="3.4" fill="#d1495b"/>
+<circle cx="261.5" cy="281.4" r="3.4" fill="#d1495b"/>
+<circle cx="349.4" cy="227.7" r="3.4" fill="#d1495b"/>
+<circle cx="445.7" cy="168.7" r="3.4" fill="#d1495b"/>
+<circle cx="533.7" cy="115.0" r="3.4" fill="#d1495b"/>
+<circle cx="630.0" cy="56.0" r="3.4" fill="#d1495b"/>
+<polyline points="78.0,406.0 165.4,392.0 261.5,362.2 349.4,347.9 445.7,338.2 533.7,315.8 630.0,312.5" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="78.0" cy="406.0" r="3.4" fill="#2e86ab"/>
+<circle cx="165.4" cy="392.0" r="3.4" fill="#2e86ab"/>
+<circle cx="261.5" cy="362.2" r="3.4" fill="#2e86ab"/>
+<circle cx="349.4" cy="347.9" r="3.4" fill="#2e86ab"/>
+<circle cx="445.7" cy="338.2" r="3.4" fill="#2e86ab"/>
+<circle cx="533.7" cy="315.8" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="312.5" r="3.4" fill="#2e86ab"/>
+<line x1="646" y1="62" x2="668" y2="62" stroke="#d1495b" stroke-width="3"/>
+<text x="674" y="66" font-size="11.5" fill="#222222">default (full-set exchange)</text>
+<line x1="646" y1="84" x2="668" y2="84" stroke="#2e86ab" stroke-width="3"/>
+<text x="674" y="88" font-size="11.5" fill="#222222">negentropy</text>
+<text x="630.0" y="47.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">3.3MB</text>
+<text x="630.0" y="303.5" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">18KB</text>
+</svg>

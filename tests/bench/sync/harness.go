@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/stretchr/testify/require"
 
 	"github.com/sourcenetwork/defradb/acp/identity"
@@ -58,15 +59,30 @@ type syncNode struct {
 	counters *Counters
 }
 
+// nodeOpt mutates the node options builder before the node is started, letting a
+// benchmark opt into extra features (e.g. set reconciliation) without changing the
+// default-sync node shape.
+type nodeOpt func(*options.NodeOptionsBuilder)
+
+// withReconciliation enables the experimental set-reconciliation protocol on the
+// node. The default-sync benchmarks do not pass it, so their node shape is
+// unchanged.
+func withReconciliation(b *options.NodeOptionsBuilder) {
+	b.DB().SetEnableSetReconciliation(true)
+}
+
 // startSyncNode starts an in-memory, P2P-enabled node. When instrument is true
 // the host is wrapped in a CountingHost via the HostDecorator seam.
-func startSyncNode(ctx context.Context, tb testing.TB, instrument bool) *syncNode {
+func startSyncNode(ctx context.Context, tb testing.TB, instrument bool, extra ...nodeOpt) *syncNode {
 	tb.Helper()
 
 	var counters *Counters
 	b := options.Node().
 		SetDisableAPI(true).
 		SetEnableDevelopment(true)
+	for _, opt := range extra {
+		opt(b)
+	}
 	// Give the node an identity. DocumentACP is enabled by default, so block
 	// serving authenticates the requesting peer; without an identity the peer
 	// returns an unparseable token that is never cached, forcing a fresh identity
@@ -98,6 +114,32 @@ func startSyncNode(ctx context.Context, tb testing.TB, instrument bool) *syncNod
 
 func (sn *syncNode) close(ctx context.Context) {
 	_ = sn.node.Close(ctx)
+}
+
+// peerID returns the node's libp2p peer ID, parsed from one of its addresses.
+func (sn *syncNode) peerID(ctx context.Context, tb testing.TB) string {
+	tb.Helper()
+	addrs, err := sn.p2p.PeerInfo(ctx)
+	require.NoError(tb, err)
+	require.NotEmpty(tb, addrs)
+	info, err := peer.AddrInfoFromString(addrs[0])
+	require.NoError(tb, err)
+	return info.ID.String()
+}
+
+// reconcileDocs runs set reconciliation for each document against peerID and
+// returns the wall-clock for the whole batch. Reconciliation is synchronous, so
+// the elapsed time already covers fetch + merge on both sides.
+func (sn *syncNode) reconcileDocs(ctx context.Context, tb testing.TB, peerID string, docIDs []string) time.Duration {
+	tb.Helper()
+	recCtx, cancel := context.WithTimeout(ctx, syncTimeout)
+	defer cancel()
+
+	start := time.Now()
+	for _, docID := range docIDs {
+		require.NoError(tb, sn.p2p.ReconcileDocument(recCtx, peerID, collectionName, docID))
+	}
+	return time.Since(start)
 }
 
 // addCollection registers the benchmark schema and returns its collection.
