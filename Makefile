@@ -347,9 +347,19 @@ test\:bench-short:
 
 # Network P2P sync baselines. These start real libp2p nodes and are opt-in
 # (skipped in the default bench lane); see tests/bench/sync/README.md.
+# Covers the default-sync baselines, the set-reconciliation contrasts, and the
+# local index-write cost.
 .PHONY: test\:bench-sync
 test\:bench-sync:
-	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench Benchmark_Sync -benchtime=1x -timeout=15m
+	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench 'Benchmark_(Sync|Reconcile|LocalWrite)' -benchtime=1x -timeout=30m
+
+# Same suite, saved to a per-device baseline for cross-tier comparison with
+# benchstat. Override the device label: `make test:bench-sync-save DEVICE=apple-m4-pro`.
+DEVICE ?= $(shell uname -m)
+.PHONY: test\:bench-sync-save
+test\:bench-sync-save:
+	@mkdir -p tests/bench/sync/baselines
+	DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$$' -bench 'Benchmark_(Sync|Reconcile|LocalWrite)' -benchtime=1x -timeout=30m | tee tests/bench/sync/baselines/$(DEVICE).txt
 
 .PHONY: test\:scripts
 test\:scripts:

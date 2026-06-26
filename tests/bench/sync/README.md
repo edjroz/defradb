@@ -1,9 +1,9 @@
-# P2P sync benchmarks (Phase 0)
+# P2P sync benchmarks
 
-Baseline benchmarks for DefraDB's **existing** full-DAG-walk sync
-(`SyncDocuments` → `syncDAG` → `db.Merge`), plus the reusable measurement
-harness that later range-based set-reconciliation (Negentropy) phases compare
-against. See `.plans/plan-negentropy-set-reconciliation-sync.md` (Phase 0).
+Benchmarks for DefraDB's **existing** full-DAG-walk sync (`SyncDocuments` →
+`syncDAG` → `db.Merge`) and the **range-based set-reconciliation** (Negentropy)
+contrasts, sharing one measurement harness so the two converge paths are
+compared like-for-like. See `.plans/plan-negentropy-set-reconciliation-sync.md`.
 
 These benchmarks start **real libp2p nodes** and are heavier and more
 timing-sensitive than the other micro-benchmarks, so they are **skipped unless
@@ -11,8 +11,11 @@ explicitly enabled**:
 
 ```sh
 DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ \
-    -run '^$' -bench Benchmark_Sync -benchtime=1x -timeout=15m
+    -run '^$' -bench 'Benchmark_(Sync|Reconcile|LocalWrite)' -benchtime=1x -timeout=30m
 ```
+
+or `make test:bench-sync` (and `make test:bench-sync-save DEVICE=<label>` to save
+a per-device baseline — see [Baselines](#baselines)).
 
 `-benchtime=1x` is recommended: each op starts two nodes and syncs, so a single
 iteration per benchmark is the intended unit. Without `DEFRA_BENCH_SYNC` the
@@ -21,16 +24,38 @@ package compiles and the benchmarks skip immediately, keeping the default
 
 ## Scenarios
 
-The three RFC workloads, parameterised by document count and divergence:
+Default-sync baselines (the three RFC workloads), parameterised by document count
+and divergence:
 
 | Benchmark | Shape |
 |---|---|
 | `Benchmark_Sync_ColdStart_*`        | empty receiver pulls an N-document history (worst case: nothing short-circuits at `IsMerged`) |
 | `Benchmark_Sync_IncrementalTail_*`  | receiver shares a base, source gets a small tail (live-update common case) |
 | `Benchmark_Sync_ManyHead_*`         | both diverge from a shared base by `k` commits each (post-partition) |
+| `Benchmark_Sync_OneDocChanged_*`    | large shared base, exactly one doc diverged — default contrast to the reconcile win |
 
-Naming: `Benchmark_Sync_<Scenario>_<shape>`. Sweep the parameters in
-`baseline_dagwalk_test.go` for fuller curves.
+Set-reconciliation contrasts (each pairs with a `Sync` shape above; the receiver
+runs with the flag on and converges via reconciliation instead of broadcast):
+
+| Benchmark | Shape |
+|---|---|
+| `Benchmark_Reconcile_ManyHead_*` / `_SingleDoc_*` | per-document head reconciliation (M1 — per-session overhead, not the asymptotic win) |
+| `Benchmark_Reconcile_Collection_ColdStart_*`      | empty receiver pulls a whole collection in one session (M2) |
+| `Benchmark_Reconcile_Collection_Tail_*`           | shared base, small tail across all docs |
+| `Benchmark_Reconcile_Collection_OneDocChanged_*`  | large shared base, one diverged doc — the asymptotic bandwidth win (control ∝ diff, not collection size) |
+
+The `OneDocChanged` pair is the headline contrast: at `docs50` the default
+doc-list is still small, but by `docs200` the reconcile control bytes stay flat
+(log-scaling) while the default's grow with collection size — the crossover.
+
+Local-write cost (no peer): the always-on maintenance-hook overhead.
+
+| Benchmark | Shape |
+|---|---|
+| `Benchmark_LocalWrite_ReconcileOff_*` / `_ReconcileOn_*` | seed N docs with the flag off vs on; the ns/op delta is the per-commit ordered-index write |
+
+Sweep the parameters in `baseline_dagwalk_test.go` / `reconcile_bench_test.go` /
+`local_write_bench_test.go` for fuller curves.
 
 ## Metrics (per op)
 
@@ -52,21 +77,32 @@ wraps the libp2p host through the `options.NodeP2P().SetHostDecorator(...)` seam
 
 - `counting_host.go` — `node.Peer` wrapper counting per-protocol wire traffic.
 - `dag_shapes.go` — schema and DAG-shape seed helpers (`seedDocs`, `applyTail`).
-- `harness.go` — node start/connect, and `measuredSync` (event-based completion).
+- `harness.go` — node start/connect, `withReconciliation`, the reconcile drivers,
+  and `measuredSync` (event-based completion).
 - `metrics.go` — blockstore diff, memory, and `b.ReportMetric` reporting.
-- `baseline_dagwalk_test.go` — the benchmarks.
+- `baseline_dagwalk_test.go` — the default-sync baselines + `OneDocChanged` contrast.
+- `reconcile_bench_test.go` — the set-reconciliation contrasts.
+- `local_write_bench_test.go` — the index-maintenance write-cost benchmarks.
 
 ## Baselines
 
-Reference numbers are committed under `baselines/`. Regenerate on a given machine
-with the command above and `tee` into a tier-named file, e.g.:
+Reference numbers are committed under `baselines/<device>.txt`. Regenerate on a
+given machine with:
 
 ```sh
-DEFRA_BENCH_SYNC=1 go test ./tests/bench/sync/ -run '^$' -bench Benchmark_Sync \
-    -benchtime=1x -timeout=15m | tee tests/bench/sync/baselines/apple-m2.txt
+make test:bench-sync-save DEVICE=apple-m4-pro
+# → tests/bench/sync/baselines/apple-m4-pro.txt
 ```
 
-Compare across phases/devices with `benchstat old.txt new.txt`.
+`DEVICE` defaults to `uname -m`. `make deps:bench` installs `benchstat`; compare
+across phases/devices (an ARM tier matrix — there is no x86 hardware in scope):
+
+```sh
+benchstat tests/bench/sync/baselines/apple-m2.txt tests/bench/sync/baselines/apple-m4-pro.txt
+```
+
+The existing `apple-m2.txt` is the stale Phase-0 anchor (default-sync only);
+regenerate the full suite per device.
 
 ## Notes
 
