@@ -132,6 +132,50 @@ func runManyHead(b *testing.B, docCount, baseUpdates, k int) {
 	report(b, samples)
 }
 
+// runSyncOneDocChanged is the default-broadcast contrast to
+// runReconcileCollectionOneDocChanged: a docCount-document shared base, exactly one
+// doc diverged by one commit, converged via SyncDocuments. Only one merge lands,
+// but the sync request must enumerate ALL docCount docIDs (it cannot know which one
+// changed), so the control cost scales with the collection size while the
+// reconcile path's tracks the single-block diff. Measuring both at docCount 50 and
+// 200 shows the crossover.
+func runSyncOneDocChanged(b *testing.B, docCount int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false)
+		recv := startSyncNode(ctx, b, true)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		docIDs := seedDocs(ctx, b, srcCol, docCount, 0)
+		connectNodes(ctx, b, recv, src)
+		recv.measuredSync(ctx, b, docIDs, docCount) // untimed: establish shared base
+		applyTail(ctx, b, srcCol, docIDs[:1], 1)    // diverge exactly one doc
+
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.measuredSync(ctx, b, docIDs, 1) // all docIDs listed, one merge expected
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+// Default-broadcast contrasts to the OneDocChanged reconcile benchmarks. Run the
+// docs200 case with -benchtime=1x.
+func Benchmark_Sync_OneDocChanged_docs50(b *testing.B)  { runSyncOneDocChanged(b, 50) }
+func Benchmark_Sync_OneDocChanged_docs200(b *testing.B) { runSyncOneDocChanged(b, 200) }
+
 // sampleReceiver snapshots the receiver's counters and blockstore growth.
 func sampleReceiver(
 	ctx context.Context,

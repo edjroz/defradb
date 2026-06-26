@@ -55,6 +55,29 @@ func BenchmarkVectorFingerprintScan(b *testing.B) {
 	}
 }
 
+// BenchmarkSegmentTreeBuild measures the O(n) per-session build cost (n Add calls
+// plus the bottom-up Build) that BenchmarkSegmentTreeFingerprint excludes. The
+// session pays this once at start, then amortizes it across many O(log n)
+// fingerprints; the gate weighs this build against the per-session query savings
+// to decide whether the build-per-session design needs a maintained-across-writes
+// tree (the Phase-5 pivot).
+func BenchmarkSegmentTreeBuild(b *testing.B) {
+	for _, n := range []int{100, 1000, 10000, 100000} {
+		b.Run(fmt.Sprintf("n=%d", n), func(b *testing.B) {
+			b.ReportAllocs()
+			for i := 0; i < b.N; i++ {
+				builder := NewSegmentTreeBuilder(n)
+				for j := 0; j < n; j++ {
+					builder.Add(0, tid(j))
+				}
+				if _, err := builder.Build(); err != nil {
+					b.Fatal(err)
+				}
+			}
+		})
+	}
+}
+
 // BenchmarkSegmentTreeFingerprint measures the O(log n) full-range fingerprint of
 // the segment tree against the Vector's O(n) scan above — the Phase-4b speedup.
 // (Build cost is excluded; it is amortized across a session's many fingerprints.)

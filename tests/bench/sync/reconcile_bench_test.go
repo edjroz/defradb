@@ -163,3 +163,56 @@ func runReconcileCollectionTail(b *testing.B, docCount, baseUpdates, tail int) {
 func Benchmark_Reconcile_Collection_Tail_docs50_base2_tail1(b *testing.B) {
 	runReconcileCollectionTail(b, 50, 2, 1)
 }
+
+// runReconcileCollectionOneDocChanged is the headline asymptotic-win measurement:
+// a large shared base of docCount documents, of which exactly ONE diverges by one
+// commit. Unlike runReconcileCollectionTail (which extends every doc), the diff
+// here is a single block regardless of docCount, so collection reconciliation's
+// control cost should stay flat as docCount grows — the range fingerprints prune
+// the matching majority and only the one divergent block is discovered + fetched.
+// Its default contrast is runSyncOneDocChanged, where SyncDocuments must still list
+// all docCount docIDs (control ∝ collection size) to catch the single change.
+func runReconcileCollectionOneDocChanged(b *testing.B, docCount int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false, withReconciliation)
+		recv := startSyncNode(ctx, b, true, withReconciliation)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		docIDs := seedDocs(ctx, b, srcCol, docCount, 0)
+		connectNodes(ctx, b, recv, src)
+		recv.reconcileCollection(ctx, b, src.peerID(ctx, b)) // untimed: establish shared base
+		applyTail(ctx, b, srcCol, docIDs[:1], 1)             // diverge exactly one doc
+
+		srcPeerID := src.peerID(ctx, b)
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.reconcileCollection(ctx, b, srcPeerID)
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+// One divergent doc in a 50-doc collection.
+func Benchmark_Reconcile_Collection_OneDocChanged_docs50(b *testing.B) {
+	runReconcileCollectionOneDocChanged(b, 50)
+}
+
+// One divergent doc in a 200-doc collection: the crossover point where the
+// reconcile control cost (flat in docCount) is well below the default broadcast's
+// (which lists all 200 docIDs). Heavier setup, so run with -benchtime=1x.
+func Benchmark_Reconcile_Collection_OneDocChanged_docs200(b *testing.B) {
+	runReconcileCollectionOneDocChanged(b, 200)
+}
