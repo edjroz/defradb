@@ -273,7 +273,23 @@ func (p *P2P) ReconcileCollection(
 	if len(cols) == 0 {
 		return client.NewErrCollectionNotFoundForName(collectionName)
 	}
-	collectionID := cols[0].Version().CollectionID
+
+	// The manual API converges both peers in one call: pull need + push have.
+	return p.reconcileCollectionScope(ctx, peerID, cols[0].Version().CollectionID, true)
+}
+
+// reconcileCollectionScope runs a collection-scope reconciliation session against
+// peerID, then pulls the blocks it is missing. When pushHave is true it also pushes
+// the blocks the peer is missing, so a single call converges both peers. The
+// on-connect auto-trigger uses pushHave=false because both peers pull on connect.
+func (p *P2P) reconcileCollectionScope(
+	ctx context.Context,
+	peerID, collectionID string,
+	pushHave bool,
+) error {
+	if p.reconcileProtocol == nil {
+		return ErrSetReconciliationDisabled
+	}
 
 	sessionCtx, cancel := context.WithTimeout(ctx, reconcileSessionTimeout)
 	defer cancel()
@@ -308,7 +324,13 @@ func (p *P2P) ReconcileCollection(
 		msg = next
 	}
 
-	return p.fetchAndMergeCollectionNeed(sessionCtx, peerID, collectionID, it.Need())
+	if err := p.fetchAndMergeCollectionNeed(sessionCtx, peerID, collectionID, it.Need()); err != nil {
+		return err
+	}
+	if pushHave {
+		return p.pushCollectionHave(sessionCtx, peerID, collectionID, it.Have())
+	}
+	return nil
 }
 
 // fetchedComposite captures the metadata of a fetched composite block needed to
@@ -382,6 +404,75 @@ func (p *P2P) fetchAndMergeCollectionNeed(
 		// already local from the pre-fetch above, so only the field blocks for the
 		// divergent sub-DAG are fetched here — keeping it diff-proportional.
 		if err := p.syncDocumentAndMerge(sessionCtx, peerID, collectionID, b.docID, b.cid); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// pushCollectionHave pushes the composite blocks the peer is missing (the initiator's
+// have-set), so a single collection reconciliation converges both peers. Only the
+// tips of the have sub-DAG are pushed; the peer's pushlog handler walks each tip's
+// DAG to pull and merge the rest. The blocks are already local on the initiator.
+func (p *P2P) pushCollectionHave(
+	ctx context.Context,
+	peerID, collectionID string,
+	have [][]byte,
+) error {
+	if len(have) == 0 {
+		return nil
+	}
+
+	linkSys := makeLinkSystem(p.host.IPLDStore())
+
+	type haveBlock struct {
+		cid   cid.Cid
+		docID string
+		raw   []byte
+	}
+	blocks := make([]haveBlock, 0, len(have))
+	referenced := make(map[string]struct{})
+
+	for _, idBytes := range have {
+		c, err := cid.Cast(idBytes)
+		if err != nil {
+			return err
+		}
+		nd, err := linkSys.Load(linking.LinkContext{Ctx: ctx}, cidlink.Link{Cid: c}, coreblock.BlockSchemaPrototype)
+		if err != nil {
+			return err
+		}
+		block, err := coreblock.GetFromNode(nd)
+		if err != nil {
+			return err
+		}
+		raw, err := block.Marshal()
+		if err != nil {
+			return NewErrMarshalBlock(err, string(block.Delta.GetDocID()), c.String())
+		}
+
+		for _, h := range block.Heads {
+			parentCID := h.Cid
+			referenced[string(parentCID.Bytes())] = struct{}{}
+		}
+		blocks = append(blocks, haveBlock{cid: c, docID: string(block.Delta.GetDocID()), raw: raw})
+	}
+
+	for _, b := range blocks {
+		if _, isParent := referenced[string(b.cid.Bytes())]; isParent {
+			continue // not a tip — the peer pulls it via the merge walk from a tip
+		}
+		roundCtx, cancel := context.WithTimeout(ctx, networkRequestTimeout)
+		pushReq := protocol.PushLogRequest{
+			DocID:        b.docID,
+			CID:          b.cid.Bytes(),
+			CollectionID: collectionID,
+			Creator:      p.host.ID(),
+			Block:        b.raw,
+		}
+		_, err := p.replicatorProtocol.SendRequest(roundCtx, pushReq, peerID)
+		cancel()
+		if err != nil {
 			return err
 		}
 	}

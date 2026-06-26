@@ -17,7 +17,6 @@ import (
 	"github.com/sourcenetwork/corelog"
 
 	"github.com/sourcenetwork/defradb/client"
-	"github.com/sourcenetwork/defradb/client/options"
 	"github.com/sourcenetwork/defradb/event"
 	"github.com/sourcenetwork/defradb/internal/keys"
 )
@@ -79,16 +78,12 @@ func (p *P2P) sharesP2PCollection(ctx context.Context, collectionID string) (boo
 	return p.db.Multistore().Systemstore().Has(ctx, keys.NewP2PCollectionKey(collectionID).Bytes())
 }
 
-// autoReconcileCollection resolves a collection ID to its name and runs a
-// reconciliation session against the peer. Errors are logged, never fatal (e.g. the
-// peer may be an old/disabled node that rejects the protocol).
+// autoReconcileCollection runs a pull-only reconciliation session against the peer.
+// It is pull-only because both peers receive the JOIN and pull independently, so they
+// converge mutually without push. Errors are logged, never fatal (e.g. the peer may
+// be an old/disabled node that rejects the protocol), and the join can precede stream
+// readiness, so a transient failure is retried after a short backoff.
 func (p *P2P) autoReconcileCollection(ctx context.Context, peerID, collectionID string) {
-	cols, err := p.db.GetCollections(ctx, options.GetCollections().SetCollectionID(collectionID))
-	if err != nil || len(cols) == 0 {
-		return
-	}
-	collectionName := cols[0].Name()
-
 	var lastErr error
 	for attempt := 0; attempt < autoReconcileMaxAttempts; attempt++ {
 		if attempt > 0 {
@@ -99,9 +94,7 @@ func (p *P2P) autoReconcileCollection(ctx context.Context, peerID, collectionID 
 			}
 		}
 
-		rctx, cancel := context.WithTimeout(ctx, reconcileSessionTimeout)
-		lastErr = p.ReconcileCollection(rctx, peerID, collectionName)
-		cancel()
+		lastErr = p.reconcileCollectionScope(ctx, peerID, collectionID, false)
 		if lastErr == nil {
 			return
 		}
