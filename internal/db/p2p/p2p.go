@@ -270,6 +270,14 @@ func New(
 		p.AddPushToReplicatorsHandler(coord)
 	}
 
+	// Auto-reconcile shared collections on peer connect (only when set
+	// reconciliation is enabled — reconcileProtocol is non-nil iff enabled).
+	if p.reconcileProtocol != nil {
+		if err := p.startReconcileAutoTrigger(ctx); err != nil {
+			return nil, err
+		}
+	}
+
 	return &p, nil
 }
 
