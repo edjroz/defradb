@@ -186,6 +186,12 @@ func (c *collection) applyDelete(
 		return err
 	}
 
+	// Maintain the set-reconciliation ordered index for this (delete) composite
+	// block (no-op unless set reconciliation is enabled), in the same txn.
+	if err = c.db.indexLocalComposite(ctx, c.Version().CollectionID, link.Cid, b); err != nil {
+		return err
+	}
+
 	// publish an update event if the txn succeeds
 	updateEvent := event.Update{
 		DocID:        primaryKey.DocID,

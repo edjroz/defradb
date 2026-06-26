@@ -586,6 +586,12 @@ func (c *collection) save(
 		return err
 	}
 
+	// Maintain the set-reconciliation ordered index for this composite block
+	// (no-op unless set reconciliation is enabled), in the same txn.
+	if err = c.db.indexLocalComposite(ctx, c.Version().CollectionID, link.Cid, headNode); err != nil {
+		return err
+	}
+
 	// publish an update event when the txn succeeds
 	updateEvent := event.Update{
 		DocID:        doc.ID().String(),

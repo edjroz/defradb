@@ -116,6 +116,12 @@ func (db *DB) executeMerge(ctx context.Context, col *collection, dagMerge event.
 		return NewErrMergeComposites(err, dagMerge.DocID)
 	}
 
+	// Maintain the set-reconciliation ordered index for the just-merged composite
+	// blocks (no-op unless set reconciliation is enabled), in the same txn.
+	if err = db.indexMergedComposites(ctx, col, mp); err != nil {
+		return NewErrReconcileIndexMerge(err, dagMerge.DocID)
+	}
+
 	for docID, oldDoc := range mp.docIDs {
 		err = syncIndexedDoc(ctx, docID, mp.col, oldDoc)
 		if err != nil {
