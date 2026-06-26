@@ -14,15 +14,26 @@ import (
 	"context"
 
 	"github.com/ipfs/go-cid"
+	"github.com/ipld/go-ipld-prime/linking"
+	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
 
 	"github.com/sourcenetwork/corekv"
+	"github.com/sourcenetwork/corekv/blockstore"
 
 	"github.com/sourcenetwork/defradb/errors"
+	"github.com/sourcenetwork/defradb/internal/core"
 	coreblock "github.com/sourcenetwork/defradb/internal/core/block"
 	"github.com/sourcenetwork/defradb/internal/datastore"
+	"github.com/sourcenetwork/defradb/internal/db/description"
 	"github.com/sourcenetwork/defradb/internal/db/id"
 	"github.com/sourcenetwork/defradb/internal/keys"
 )
+
+// reconcileIndexBuiltKey is the systemstore sentinel marking the reconcile index as
+// backfilled (mirrors the "/init" marker). It is set after a successful backfill and
+// cleared while reconciliation is disabled, so re-enabling rebuilds the index and
+// captures any composite blocks written while it was off.
+var reconcileIndexBuiltKey = []byte("/reconcile_index_built")
 
 // reconcileIndexItem is one composite block in a collection's ordered reconcile
 // index: its CRDT height and CID.
@@ -130,4 +141,148 @@ func (db *DB) indexLocalComposite(ctx context.Context, collectionID string, c ci
 	}
 	store := datastore.CtxMustGetTxn(ctx).ReconcileIndex()
 	return insertReconcileIndex(ctx, store, shortID, block.Delta.GetPriority(), c)
+}
+
+// ensureReconcileIndex keeps the reconcile-index backfill state consistent at startup,
+// within the init transaction. When reconciliation is disabled it clears the "built"
+// sentinel (so a later enable rebuilds); when enabled and not yet built it runs the
+// backfill and sets the sentinel. It is a fast no-op on every subsequent start.
+func (db *DB) ensureReconcileIndex(ctx context.Context) error {
+	system := datastore.CtxMustGetTxn(ctx).Systemstore()
+
+	if !db.setReconciliationEnabled {
+		has, err := system.Has(ctx, reconcileIndexBuiltKey)
+		if err != nil {
+			return err
+		}
+		if has {
+			return system.Delete(ctx, reconcileIndexBuiltKey)
+		}
+		return nil
+	}
+
+	built, err := system.Has(ctx, reconcileIndexBuiltKey)
+	if err != nil {
+		return err
+	}
+	if built {
+		return nil
+	}
+
+	if err := db.backfillReconcileIndex(ctx); err != nil {
+		return err
+	}
+	return system.Set(ctx, reconcileIndexBuiltKey, []byte{1})
+}
+
+// backfillReconcileIndex (re)builds the reconcile index from existing data by walking
+// every document's composite DAG from its heads and inserting each composite block,
+// in the current transaction. Idempotent — deterministic keys make a re-run (or
+// crash-recovery) a no-op.
+func (db *DB) backfillReconcileIndex(ctx context.Context) error {
+	txn := datastore.CtxMustGetTxn(ctx)
+
+	blockLS := cidlink.DefaultLinkSystem()
+	blockLS.SetReadStorage(blockstore.NewIPLDStore(txn.Blockstore()))
+	indexStore := txn.ReconcileIndex()
+
+	visited := make(map[cid.Cid]struct{})
+	shortIDByVersion := make(map[string]uint32)
+
+	iter, err := txn.Headstore().Iterator(ctx, corekv.IterOptions{
+		Prefix:   keys.HeadstoreDocKey{}.Bytes(),
+		KeysOnly: true,
+	})
+	if err != nil {
+		return err
+	}
+
+	for {
+		hasNext, err := iter.Next()
+		if err != nil {
+			return errors.Join(err, iter.Close())
+		}
+		if !hasNext {
+			break
+		}
+		headKey, err := keys.NewHeadstoreDocKey(string(iter.Key()))
+		if err != nil {
+			return errors.Join(err, iter.Close())
+		}
+		// Reconcile only the composite spine; field heads are skipped.
+		if headKey.FieldID != core.COMPOSITE_NAMESPACE {
+			continue
+		}
+		if err := db.indexCompositeDAG(ctx, &blockLS, indexStore, headKey.Cid, visited, shortIDByVersion); err != nil {
+			return errors.Join(err, iter.Close())
+		}
+	}
+	return iter.Close()
+}
+
+// indexCompositeDAG walks a composite DAG from head down to genesis with an explicit
+// stack (deep DAGs preclude recursion), inserting each unvisited composite block. The
+// visited set is shared across heads so shared ancestors are processed once.
+func (db *DB) indexCompositeDAG(
+	ctx context.Context,
+	blockLS *linking.LinkSystem,
+	indexStore corekv.Writer,
+	head cid.Cid,
+	visited map[cid.Cid]struct{},
+	shortIDByVersion map[string]uint32,
+) error {
+	stack := []cid.Cid{head}
+	for len(stack) > 0 {
+		c := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if _, ok := visited[c]; ok {
+			continue
+		}
+		visited[c] = struct{}{}
+
+		nd, err := blockLS.Load(linking.LinkContext{Ctx: ctx}, cidlink.Link{Cid: c}, coreblock.BlockSchemaPrototype)
+		if err != nil {
+			return err
+		}
+		block, err := coreblock.GetFromNode(nd)
+		if err != nil {
+			return err
+		}
+
+		shortID, err := db.reconcileShortIDForVersion(ctx, block.Delta.GetCollectionVersionID(), shortIDByVersion)
+		if err != nil {
+			return err
+		}
+		if err := insertReconcileIndex(ctx, indexStore, shortID, block.Delta.GetPriority(), c); err != nil {
+			return err
+		}
+
+		for _, h := range block.Heads {
+			stack = append(stack, h.Cid)
+		}
+	}
+	return nil
+}
+
+// reconcileShortIDForVersion resolves a block's collection-version ID to its
+// collection short ID, caching by version ID (many blocks share a version).
+func (db *DB) reconcileShortIDForVersion(
+	ctx context.Context,
+	versionID string,
+	cache map[string]uint32,
+) (uint32, error) {
+	if shortID, ok := cache[versionID]; ok {
+		return shortID, nil
+	}
+	col, err := description.GetCollectionByID(ctx, db.collectionRepository, versionID)
+	if err != nil {
+		return 0, err
+	}
+	system := datastore.CtxMustGetTxn(ctx).Systemstore()
+	shortID, err := id.GetUncachedShortCollectionID(ctx, col.CollectionID, system)
+	if err != nil {
+		return 0, err
+	}
+	cache[versionID] = shortID
+	return shortID, nil
 }

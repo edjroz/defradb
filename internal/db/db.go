@@ -342,6 +342,12 @@ func (db *DB) initialize(ctx context.Context) error {
 			return err
 		}
 
+		// Backfill / refresh the set-reconciliation ordered index for any existing
+		// data (no-op unless reconciliation is enabled and not yet built).
+		if err := db.ensureReconcileIndex(ctx); err != nil {
+			return err
+		}
+
 		// The query language types are only updated on successful commit
 		// so we must not forget to do so on success regardless of whether
 		// we have written to the datastores.
@@ -350,6 +356,10 @@ func (db *DB) initialize(ctx context.Context) error {
 
 	err = txn.Systemstore().Set(ctx, []byte("/init"), []byte{1})
 	if err != nil {
+		return err
+	}
+
+	if err := db.ensureReconcileIndex(ctx); err != nil {
 		return err
 	}
 

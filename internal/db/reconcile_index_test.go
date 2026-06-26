@@ -12,12 +12,16 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/ipfs/go-cid"
 	"github.com/multiformats/go-multihash"
 	"github.com/sourcenetwork/corekv/memory"
 	"github.com/stretchr/testify/require"
+
+	"github.com/sourcenetwork/defradb/client"
+	dbid "github.com/sourcenetwork/defradb/internal/db/id"
 )
 
 func testIndexCID(seed int) cid.Cid {
@@ -82,4 +86,102 @@ func TestReconcileIndex_Idempotent(t *testing.T) {
 	items, err := reconcileIndexItems(ctx, store, 1)
 	require.NoError(t, err)
 	require.Len(t, items, 1)
+}
+
+// readReconcileIndex reads a collection's index items in a fresh read-only txn.
+func readReconcileIndex(ctx context.Context, t *testing.T, db *DB, shortID uint32) []reconcileIndexItem {
+	ctx, txn, err := ensureContextTxn(ctx, db, true)
+	require.NoError(t, err)
+	defer txn.Discard()
+	items, err := reconcileIndexItems(ctx, txn.ReconcileIndex(), shortID)
+	require.NoError(t, err)
+	return items
+}
+
+// runEnsureReconcileIndex drives ensureReconcileIndex in its own committed txn.
+func runEnsureReconcileIndex(ctx context.Context, t *testing.T, db *DB) {
+	ctx, txn, err := ensureContextTxn(ctx, db, false)
+	require.NoError(t, err)
+	defer txn.Discard()
+	require.NoError(t, db.ensureReconcileIndex(ctx))
+	require.NoError(t, txn.Commit())
+}
+
+func collectionShortIDForTest(ctx context.Context, t *testing.T, db *DB, collectionID string) uint32 {
+	ctx, txn, err := ensureContextTxn(ctx, db, true)
+	require.NoError(t, err)
+	defer txn.Discard()
+	shortID, err := dbid.GetUncachedShortCollectionID(ctx, collectionID, txn.Systemstore())
+	require.NoError(t, err)
+	return shortID
+}
+
+// TestReconcileIndex_Backfill writes composite blocks with reconciliation OFF (so the
+// maintenance hooks no-op and the index stays empty), then enables it and runs the
+// backfill — which must populate the index with every composite block by walking the
+// document DAGs.
+func TestReconcileIndex_Backfill(t *testing.T) {
+	ctx := context.Background()
+	db, err := newBadgerDB(ctx) // reconciliation defaults OFF
+	require.NoError(t, err)
+
+	_, err = db.AddCollection(ctx, `type User { name: String value: Int }`)
+	require.NoError(t, err)
+	col, err := db.GetCollectionByName(ctx, "User")
+	require.NoError(t, err)
+
+	// 2 docs, 1 update each → 4 composite blocks (create + update per doc).
+	for i := 0; i < 2; i++ {
+		doc, err := client.NewDocFromJSON(ctx, []byte(fmt.Sprintf(`{"name":%q,"value":0}`, fmt.Sprintf("u%d", i))), col.Version())
+		require.NoError(t, err)
+		require.NoError(t, col.AddDocument(ctx, doc))
+		require.NoError(t, doc.SetWithJSON(ctx, []byte(`{"value":1}`)))
+		require.NoError(t, col.SaveDocument(ctx, doc))
+	}
+
+	shortID := collectionShortIDForTest(ctx, t, db, col.Version().CollectionID)
+
+	// Flag off ⇒ hooks were no-ops ⇒ index empty.
+	require.Empty(t, readReconcileIndex(ctx, t, db, shortID))
+
+	// Enable + backfill ⇒ every composite block indexed.
+	db.setReconciliationEnabled = true
+	runEnsureReconcileIndex(ctx, t, db)
+	require.Len(t, readReconcileIndex(ctx, t, db, shortID), 4)
+
+	// Idempotent re-run (sentinel now set; also deterministic keys).
+	runEnsureReconcileIndex(ctx, t, db)
+	require.Len(t, readReconcileIndex(ctx, t, db, shortID), 4)
+}
+
+// TestReconcileIndex_Backfill_ToggleClearsSentinel verifies disabling reconciliation
+// clears the "built" sentinel so a later enable rebuilds (capturing blocks written
+// while it was off).
+func TestReconcileIndex_Backfill_ToggleClearsSentinel(t *testing.T) {
+	ctx := context.Background()
+	db, err := newBadgerDB(ctx)
+	require.NoError(t, err)
+
+	_, err = db.AddCollection(ctx, `type User { name: String value: Int }`)
+	require.NoError(t, err)
+	col, err := db.GetCollectionByName(ctx, "User")
+	require.NoError(t, err)
+	shortID := collectionShortIDForTest(ctx, t, db, col.Version().CollectionID)
+
+	// Enable, build (no docs yet) — sentinel set.
+	db.setReconciliationEnabled = true
+	runEnsureReconcileIndex(ctx, t, db)
+
+	// Write a doc while DISABLED (hooks off ⇒ index misses it).
+	db.setReconciliationEnabled = false
+	doc, err := client.NewDocFromJSON(ctx, []byte(`{"name":"a","value":0}`), col.Version())
+	require.NoError(t, err)
+	require.NoError(t, col.AddDocument(ctx, doc))
+
+	// A disabled init pass clears the sentinel...
+	runEnsureReconcileIndex(ctx, t, db)
+	// ...so re-enabling rebuilds and captures the doc written while off.
+	db.setReconciliationEnabled = true
+	runEnsureReconcileIndex(ctx, t, db)
+	require.Len(t, readReconcileIndex(ctx, t, db, shortID), 1)
 }
