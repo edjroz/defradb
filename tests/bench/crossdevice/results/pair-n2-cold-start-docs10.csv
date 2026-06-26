@@ -1,0 +1,5 @@
+topology,N,scenario,mode,nodeID,ctrlBytesSent,ctrlBytesRecv,ctrlMsgs,blocks,blockBytes,wallMs,rounds,converged
+pair,2,cold-start,ranges,0,8981,3669,24,64,13338,1086.9,1,True
+pair,2,cold-start,ranges,1,15929,8981,44,64,13338,1086.9,1,True
+pair,2,cold-start,default,0,1757,1192,5,64,13338,1511.7,1,True
+pair,2,cold-start,default,1,1263,746,5,64,13338,1511.7,1,True

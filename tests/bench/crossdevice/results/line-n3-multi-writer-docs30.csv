@@ -1,0 +1,7 @@
+topology,N,scenario,mode,nodeID,ctrlBytesSent,ctrlBytesRecv,ctrlMsgs,blocks,blockBytes,wallMs,rounds,converged
+line,3,multi-writer,ranges,0,10108,5857,28,184,39258,7161.9,2,True
+line,3,multi-writer,ranges,1,36525,17382,96,184,39258,7161.9,2,True
+line,3,multi-writer,ranges,2,31794,18408,88,184,39258,7161.9,2,True
+line,3,multi-writer,default,0,16598,8700,19,184,39258,4542.2,3,True
+line,3,multi-writer,default,1,17866,9780,23,184,39258,4542.2,3,True
+line,3,multi-writer,default,2,14904,8700,19,184,39258,4542.2,3,True
