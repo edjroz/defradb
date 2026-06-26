@@ -19,7 +19,7 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
 | 1 | **Asymptotic potential** (modelled sweep) | **188× fewer control bytes** to find a 2-item difference at n=100k | charts 1–4, `data/comparison.csv` (Phase-2 engine, measured) vs modelled full-set baseline |
 | 2 | **Per-document overhead** (M1, real nodes) | reconciliation costs **~44×** the control bytes of broadcast doc-sync at per-document scale (one session per doc); **identical payload** | charts 5–6, `data/measured_m1.csv` |
 | 3 | **Per-collection collapse** (M2, real nodes) | one collection session brings that back to **~broadcast levels** (2172 vs 1509 B at 10 docs; 4 round-trips, not 42) | charts 7–8, `data/measured_m2.csv` |
-| 4 | **The payoff** (tiny-diff, real nodes) | one changed doc in a growing collection: default control scales with collection size (**2.1KB→8.4KB**, 50→200 docs) while reconciliation stays ~flat (**2.7KB→4.5KB**) and **crosses below** it — control ∝ diff, not collection size | chart 9, `data/measured_m5.csv` |
+| 4 | **The payoff** (tiny-diff, real nodes) | one changed doc in a growing collection: default control scales with collection size (**2.1→4.2→8.4KB** at 50/100/200 docs) while reconciliation flattens (**2.7→4.3→4.5KB**), **crossing over ~100 docs** — control ∝ diff, not collection size | chart 9, `data/measured_m5.csv` |
 | 5 | **Compute** (segment tree) | full-range fingerprint is **O(log n) ~280ns flat** at n=100k vs the Vector's O(n) ~5.8ms (**~21,000×**); per-session build is O(n) ~31ms at n=100k (amortised across the session) | `negentropy` micro-benchmarks |
 | 6 | **The cost** (index-write, real node) | the always-on per-commit ordered-index write adds **~4.6%** local write latency (76.4ms→79.96ms for 50 docs × 5 updates) and **~2.8%** heap | chart 10, `data/measured_indexwrite.csv` |
 
@@ -43,12 +43,15 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
 The measurements above run both nodes on one machine. `tests/bench/crossdevice/`
 runs the same default-vs-ranges contrast across an **N-node network with
 configurable topologies** on separate processes/devices, using an instrumented
-bench-node that reports the same control-byte metric. The committed smoke runs show
-the tiny-diff win reproduces across separate processes (**~2× fewer control bytes**,
-`pair`/`tiny-diff`) and that arbitrary topologies converge correctly
-(`line`/`multi-writer`, multi-hop). See that directory's README — including the
-honest note that its `ranges` control bytes include bidirectional-push tips, so the
-in-process numbers here remain the cleanest control-byte measurement.
+bench-node that reports the same control-byte metric. Measured on **two physical Macs**
+(Mac mini ↔ MacBook over a LAN, `pair`/`tiny-diff`/docs50): reconciliation moves
+**8,588 vs 17,984 network control bytes — 2.09× fewer** — and both nodes converge
+to an identical block set (chart 11, `data/measured_crossdevice.csv`). Arbitrary
+topologies also converge correctly (`line`/`multi-writer`, multi-hop). See that
+directory's README — including the honest notes that its `ranges` control bytes
+include bidirectional-push tips (the in-process numbers here remain the cleanest
+control-byte measurement) and that the multi-size cross-device sweep is bounded by a
+push-at-scale limitation, so the in-process benchmarks supply the size curve.
 
 ## Honest caveats
 
