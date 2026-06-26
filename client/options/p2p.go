@@ -506,3 +506,32 @@ func (b *SyncDocumentsOptionsBuilder) SetIdentity(id identity.Identity) *SyncDoc
 	})
 	return b
 }
+
+// ReconcileDocumentOptions contains options for ReconcileDocument operation.
+type ReconcileDocumentOptions struct {
+	// Identity is the identity of the actor performing the operation.
+	Identity immutable.Option[identity.Identity]
+}
+
+// GetIdentity returns the identity for the operation.
+func (o *ReconcileDocumentOptions) GetIdentity() immutable.Option[identity.Identity] {
+	return o.Identity
+}
+
+// ReconcileDocumentOptionsBuilder is a builder for ReconcileDocumentOptions.
+type ReconcileDocumentOptionsBuilder struct {
+	enumerableBuilder[ReconcileDocumentOptions]
+}
+
+// ReconcileDocument creates a new ReconcileDocumentOptionsBuilder instance.
+func ReconcileDocument() *ReconcileDocumentOptionsBuilder {
+	return &ReconcileDocumentOptionsBuilder{}
+}
+
+// SetIdentity sets the identity for the operation.
+func (b *ReconcileDocumentOptionsBuilder) SetIdentity(id identity.Identity) *ReconcileDocumentOptionsBuilder {
+	b.append(func(opts *ReconcileDocumentOptions) {
+		opts.Identity = immutable.Some(id)
+	})
+	return b
+}

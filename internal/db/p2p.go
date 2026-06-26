@@ -375,6 +375,33 @@ func (db *DB) SyncDocuments(
 	return db.p2p.SyncDocuments(ctx, collectionName, docIDs)
 }
 
+// ReconcileDocument runs range-based set reconciliation against the given peer for a
+// single document's heads, converging both nodes. It is part of the experimental,
+// default-off set-reconciliation protocol.
+// context.WithTimeout can be used to set a timeout for the operation.
+//
+// WARNING: This function does not respect transactions.
+func (db *DB) ReconcileDocument(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	docID string,
+	opts ...options.Enumerable[options.ReconcileDocumentOptions],
+) error {
+	opt := utils.NewOptions(opts...)
+
+	if err := db.checkNodeAccess(ctx, opt.Identity, acpTypes.NodeSyncP2PDocumentsPerm); err != nil {
+		return err
+	}
+
+	ctx = identity.WithContext(ctx, opt.Identity)
+
+	if db.p2p == nil {
+		return ErrNoP2P
+	}
+	return db.p2p.ReconcileDocument(ctx, peerID, collectionName, docID)
+}
+
 // SyncCollectionVersions synchronizes the given collection versions to the local node.
 //
 // It will not complete until a version is found, so it is strongly recommended

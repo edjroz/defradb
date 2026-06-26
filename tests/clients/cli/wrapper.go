@@ -322,6 +322,29 @@ func (w *Wrapper) SyncDocuments(
 	return err
 }
 
+func (w *Wrapper) ReconcileDocument(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	docID string,
+	opts ...options.Enumerable[options.ReconcileDocumentOptions],
+) error {
+	args := []string{"client", "p2p", "document", "reconcile"}
+
+	opt := utils.NewOptions(opts...)
+	args = appendIdentityArg(args, opt.GetIdentity())
+
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline {
+		args = append(args, "--timeout", time.Until(deadline).String())
+	}
+
+	args = append(args, peerID, collectionName, docID)
+
+	_, err := w.cmd.execute(ctx, args)
+	return err
+}
+
 func (w *Wrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

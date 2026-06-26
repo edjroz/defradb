@@ -3456,6 +3456,90 @@ func (_c *Txn_SyncDocuments_Call) RunAndReturn(run func(ctx context.Context, col
 	return _c
 }
 
+// ReconcileDocument provides a mock function for the type Txn
+func (_mock *Txn) ReconcileDocument(ctx context.Context, peerID string, collectionName string, docID string, opts ...options.Enumerable[options.ReconcileDocumentOptions]) error {
+	var tmpRet mock.Arguments
+	if len(opts) > 0 {
+		tmpRet = _mock.Called(ctx, peerID, collectionName, docID, opts)
+	} else {
+		tmpRet = _mock.Called(ctx, peerID, collectionName, docID)
+	}
+	ret := tmpRet
+
+	if len(ret) == 0 {
+		panic("no return value specified for ReconcileDocument")
+	}
+
+	var r0 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string, string, string, ...options.Enumerable[options.ReconcileDocumentOptions]) error); ok {
+		r0 = returnFunc(ctx, peerID, collectionName, docID, opts...)
+	} else {
+		r0 = ret.Error(0)
+	}
+	return r0
+}
+
+// Txn_ReconcileDocument_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ReconcileDocument'
+type Txn_ReconcileDocument_Call struct {
+	*mock.Call
+}
+
+// ReconcileDocument is a helper method to define mock.On call
+//   - ctx context.Context
+//   - peerID string
+//   - collectionName string
+//   - docID string
+//   - opts ...options.Enumerable[options.ReconcileDocumentOptions]
+func (_e *Txn_Expecter) ReconcileDocument(ctx interface{}, peerID interface{}, collectionName interface{}, docID interface{}, opts ...interface{}) *Txn_ReconcileDocument_Call {
+	return &Txn_ReconcileDocument_Call{Call: _e.mock.On("ReconcileDocument",
+		append([]interface{}{ctx, peerID, collectionName, docID}, opts...)...)}
+}
+
+func (_c *Txn_ReconcileDocument_Call) Run(run func(ctx context.Context, peerID string, collectionName string, docID string, opts ...options.Enumerable[options.ReconcileDocumentOptions])) *Txn_ReconcileDocument_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 context.Context
+		if args[0] != nil {
+			arg0 = args[0].(context.Context)
+		}
+		var arg1 string
+		if args[1] != nil {
+			arg1 = args[1].(string)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		var arg3 string
+		if args[3] != nil {
+			arg3 = args[3].(string)
+		}
+		var arg4 []options.Enumerable[options.ReconcileDocumentOptions]
+		var variadicArgs []options.Enumerable[options.ReconcileDocumentOptions]
+		if len(args) > 4 {
+			variadicArgs = args[4].([]options.Enumerable[options.ReconcileDocumentOptions])
+		}
+		arg4 = variadicArgs
+		run(
+			arg0,
+			arg1,
+			arg2,
+			arg3,
+			arg4...,
+		)
+	})
+	return _c
+}
+
+func (_c *Txn_ReconcileDocument_Call) Return(err error) *Txn_ReconcileDocument_Call {
+	_c.Call.Return(err)
+	return _c
+}
+
+func (_c *Txn_ReconcileDocument_Call) RunAndReturn(run func(ctx context.Context, peerID string, collectionName string, docID string, opts ...options.Enumerable[options.ReconcileDocumentOptions]) error) *Txn_ReconcileDocument_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // VerifySignature provides a mock function for the type Txn
 func (_mock *Txn) VerifySignature(ctx context.Context, blockCid string, pubKey crypto.PublicKey, opts ...options.Enumerable[options.VerifySignatureOptions]) error {
 	var tmpRet mock.Arguments

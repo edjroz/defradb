@@ -198,6 +198,17 @@ func (w *Wrapper) SyncDocuments(
 	return err
 }
 
+func (w *Wrapper) ReconcileDocument(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	docID string,
+	opts ...options.Enumerable[options.ReconcileDocumentOptions],
+) error {
+	_, err := execute(ctx, w.value, "reconcileDocument", peerID, collectionName, docID, jsOpts(opts))
+	return err
+}
+
 func (w *Wrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

@@ -882,6 +882,25 @@ func (txn *Txn) SyncDocuments(
 	return txn.db.SyncDocuments(ctx, collectionName, docIDs, opts...)
 }
 
+func (txn *Txn) ReconcileDocument(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	docID string,
+	opts ...options.Enumerable[options.ReconcileDocumentOptions],
+) error {
+	ctx = InitContext(ctx, txn)
+
+	ctx, unlock := lockForTxn(ctx, txn)
+	defer unlock()
+
+	if txn.isClosed {
+		return client.ErrTransactionNotFound
+	}
+
+	return txn.db.ReconcileDocument(ctx, peerID, collectionName, docID, opts...)
+}
+
 func (txn *Txn) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

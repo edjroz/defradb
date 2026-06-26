@@ -118,6 +118,21 @@ type P2P interface {
 		opts ...options.Enumerable[options.SyncDocumentsOptions],
 	) error
 
+	// ReconcileDocument runs range-based set reconciliation against the given peer for
+	// a single document's heads, converging both nodes by pulling the heads the local
+	// node is missing and pushing the heads the peer is missing.
+	//
+	// It is part of the experimental, default-off set-reconciliation protocol and
+	// returns an error if that protocol is not enabled on the node.
+	// context.WithTimeout can be used to set a timeout for the operation.
+	ReconcileDocument(
+		ctx context.Context,
+		peerID string,
+		collectionName string,
+		docID string,
+		opts ...options.Enumerable[options.ReconcileDocumentOptions],
+	) error
+
 	// SyncCollectionVersions synchronizes the given collection versions to local node.
 	//
 	// It will not complete until a version is found, so it is strongly recommended

@@ -49,6 +49,7 @@ func NewDefraCommand(ctx context.Context) *cobra.Command {
 		MakeP2PDocumentDeleteCommand(ctx),
 		MakeP2PDocumentListCommand(ctx),
 		MakeP2PDocumentSyncCommand(ctx),
+		MakeP2PDocumentReconcileCommand(ctx),
 	)
 
 	p2p_replicator := MakeP2PReplicatorCommand(ctx)

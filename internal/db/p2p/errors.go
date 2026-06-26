@@ -71,7 +71,22 @@ var (
 	ErrTimeoutCollectionSync       = errors.New("timeout while syncing branchable collection")
 	ErrCollectionNotBranchable     = errors.New("collection is not branchable")
 	ErrNoHeadsForBranchableCol     = errors.New("no heads found for branchable collection")
+	ErrSetReconciliationDisabled   = errors.New("set reconciliation is not enabled on this node")
+	errUnsupportedReconcileScope   = errors.New("unsupported reconciliation scope")
+	errReconcileResponder          = errors.New("reconciliation responder returned an error")
 )
+
+// NewErrUnsupportedReconcileScope reports a reconcile request for a scope kind
+// this node does not handle.
+func NewErrUnsupportedReconcileScope(kind uint8) error {
+	return errors.WithStack(errUnsupportedReconcileScope, errors.NewKV("Kind", kind))
+}
+
+// NewErrReconcileResponder wraps an error string returned by a reconciliation
+// responder so the initiator surfaces it instead of treating the reply as empty.
+func NewErrReconcileResponder(msg string) error {
+	return errors.WithStack(errReconcileResponder, errors.NewKV("Responder", msg))
+}
 
 func NewErrReplicatorCollections(inner error, kv ...errors.KV) error {
 	return errors.WithStack(errors.Join(ErrReplicatorCollections, inner), kv...)

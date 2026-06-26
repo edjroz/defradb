@@ -289,6 +289,43 @@ func (h *p2pHandler) SyncDocuments(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 }
 
+func (h *p2pHandler) ReconcileDocument(rw http.ResponseWriter, req *http.Request) {
+	db := mustGetContextClientDB(req)
+
+	var reqBody struct {
+		PeerID         string `json:"peerID"`
+		CollectionName string `json:"collectionName"`
+		DocID          string `json:"docID"`
+		Timeout        string `json:"timeout"`
+	}
+
+	if err := requestJSON(req, &reqBody); err != nil {
+		responseJSON(rw, http.StatusBadRequest, errorResponse{err})
+		return
+	}
+
+	ctx := req.Context()
+	if reqBody.Timeout != "" {
+		timeout, err := time.ParseDuration(reqBody.Timeout)
+		if err != nil {
+			responseJSON(rw, http.StatusBadRequest, errorResponse{err})
+			return
+		}
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+	}
+
+	opts := options.WithIdentity(options.ReconcileDocument(), identity.FromContext(ctx))
+	err := db.ReconcileDocument(ctx, reqBody.PeerID, reqBody.CollectionName, reqBody.DocID, opts)
+	if err != nil {
+		responseJSON(rw, http.StatusInternalServerError, errorResponse{err})
+		return
+	}
+
+	rw.WriteHeader(http.StatusOK)
+}
+
 func (h *p2pHandler) SyncCollectionVersions(rw http.ResponseWriter, req *http.Request) {
 	db := mustGetContextClientDB(req)
 
@@ -563,6 +600,31 @@ func (h *p2pHandler) bindRoutes(router *Router) {
 	syncDocuments.Responses.Set("400", errorResponse)
 	syncDocuments.Responses.Set("500", errorResponse)
 
+	reconcileDocumentRequestSchema := openapi3.NewObjectSchema().
+		WithProperty("peerID", openapi3.NewStringSchema()).
+		WithProperty("collectionName", openapi3.NewStringSchema()).
+		WithProperty("docID", openapi3.NewStringSchema()).
+		WithProperty("timeout", openapi3.NewStringSchema())
+
+	reconcileDocumentRequest := openapi3.NewRequestBody().
+		WithRequired(true).
+		WithContent(openapi3.NewContentWithJSONSchema(reconcileDocumentRequestSchema))
+
+	reconcileDocumentResponse := openapi3.NewResponse().
+		WithDescription("Document reconciliation completed successfully")
+
+	reconcileDocument := openapi3.NewOperation()
+	reconcileDocument.Description = "Reconcile a document's heads with a peer using range-based set reconciliation"
+	reconcileDocument.OperationID = "reconcile_peer_document"
+	reconcileDocument.Tags = []string{"p2p"}
+	reconcileDocument.RequestBody = &openapi3.RequestBodyRef{
+		Value: reconcileDocumentRequest,
+	}
+	reconcileDocument.Responses = openapi3.NewResponses()
+	reconcileDocument.Responses.Set("200", &openapi3.ResponseRef{Value: reconcileDocumentResponse})
+	reconcileDocument.Responses.Set("400", errorResponse)
+	reconcileDocument.Responses.Set("500", errorResponse)
+
 	syncCollectionVersionsRequestSchema := openapi3.NewObjectSchema().
 		WithProperty("versionIDs", openapi3.NewArraySchema().WithItems(openapi3.NewStringSchema())).
 		WithProperty("timeout", openapi3.NewStringSchema())
@@ -626,4 +688,5 @@ func (h *p2pHandler) bindRoutes(router *Router) {
 	router.AddRoute("/p2p/documents", http.MethodPost, addPeerDocuments, h.AddP2PDocuments)
 	router.AddRoute("/p2p/documents", http.MethodDelete, deletePeerDocuments, h.DeleteP2PDocuments)
 	router.AddRoute("/p2p/documents/sync", http.MethodPost, syncDocuments, h.SyncDocuments)
+	router.AddRoute("/p2p/documents/reconcile", http.MethodPost, reconcileDocument, h.ReconcileDocument)
 }

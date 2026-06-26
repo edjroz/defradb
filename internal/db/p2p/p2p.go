@@ -110,7 +110,7 @@ type P2P struct {
 	replicatorProtocol protocol.CommChannel[protocol.PushLogRequest, protocol.PushLogReply]
 	// reconcileProtocol is registered only when set reconciliation is enabled (see
 	// registerReconcileProtocol); it is nil otherwise.
-	reconcileProtocol protocol.CommChannel[protocol.ReconcileRequest, protocol.ReconcileReply]
+	reconcileProtocol protocol.CommChannel[protocol.ReconcileMessage, protocol.ReconcileMessage]
 
 	ctx                  context.Context
 	db                   DB
@@ -159,29 +159,18 @@ func (proc *pushLogCommProcessor) ProcessRequest(
 	return protocol.PushLogReply{}, proc.p2p.processPushlogRequest(ctx, &req, true)
 }
 
-// reconcileCommProcessor implements CommProcessor for range-based set reconciliation.
-//
-// Phase 1 is a no-op scaffold: the handler is registered (behind the
-// EnableSetReconciliation flag) so the protocol exists on the wire, but request
-// processing lands in the reconciler phases.
-type reconcileCommProcessor struct{}
-
-func (*reconcileCommProcessor) ProcessRequest(
-	_ context.Context,
-	_ protocol.ReconcileRequest,
-) (protocol.ReconcileReply, error) {
-	return protocol.ReconcileReply{}, nil
-}
-
 // registerReconcileProtocol registers the set-reconciliation comm-channel handlers
 // (/defradb/reconcile_req|resp) when the feature is enabled. When disabled it is a
 // no-op: the handlers are never registered, so disabled/old peers libp2p-reject the
 // protocol and fall back to pushlog/head sync, leaving the off-path unchanged.
+//
+// The processor (see reconcile.go) is stateless: each request is answered purely
+// from the local set for the requested scope.
 func (p *P2P) registerReconcileProtocol(host client.Host, enabled bool) {
 	if !enabled {
 		return
 	}
-	p.reconcileProtocol = protocol.NewCommChannel(host, "reconcile", &reconcileCommProcessor{})
+	p.reconcileProtocol = protocol.NewCommChannel(host, "reconcile", &reconcileCommProcessor{p2p: p})
 }
 
 // peerEventHandlingHost wraps a Host to add a PeerEventHandler to pubsub topics.

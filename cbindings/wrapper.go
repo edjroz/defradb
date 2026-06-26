@@ -355,6 +355,19 @@ func (w *CWrapper) SyncDocuments(
 	return nil
 }
 
+// ReconcileDocument is not yet wired through the C bindings. The experimental
+// set-reconciliation protocol is exposed on the Go and HTTP clients first; the C
+// binding lands with a dedicated C entrypoint in a follow-up.
+func (w *CWrapper) ReconcileDocument(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ string,
+	_ ...options.Enumerable[options.ReconcileDocumentOptions],
+) error {
+	return errors.New("ReconcileDocument is not implemented in the C bindings")
+}
+
 func (w *CWrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,
