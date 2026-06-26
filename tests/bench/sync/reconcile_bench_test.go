@@ -164,15 +164,16 @@ func Benchmark_Reconcile_Collection_Tail_docs50_base2_tail1(b *testing.B) {
 	runReconcileCollectionTail(b, 50, 2, 1)
 }
 
-// runReconcileCollectionOneDocChanged is the headline asymptotic-win measurement:
-// a large shared base of docCount documents, of which exactly ONE diverges by one
-// commit. Unlike runReconcileCollectionTail (which extends every doc), the diff
-// here is a single block regardless of docCount, so collection reconciliation's
-// control cost should stay flat as docCount grows — the range fingerprints prune
-// the matching majority and only the one divergent block is discovered + fetched.
-// Its default contrast is runSyncOneDocChanged, where SyncDocuments must still list
-// all docCount docIDs (control ∝ collection size) to catch the single change.
-func runReconcileCollectionOneDocChanged(b *testing.B, docCount int) {
+// runReconcileCollectionDiff is the asymptotic-win measurement: a shared base of
+// docCount documents, of which diffCount diverge by one commit each. The receiver
+// reconciles the whole collection in one session, so its control cost tracks
+// O(diffCount · log docCount) — the range fingerprints prune the matching majority
+// and only the divergent blocks are discovered + fetched. Its default contrast is
+// runSyncDiff, where SyncDocuments must list all docCount docIDs (control ∝ docCount,
+// independent of diffCount). Varying docCount (diff fixed) isolates the log-vs-linear
+// behaviour; varying diffCount (docCount fixed) isolates the O(diff·log n) vs O(n)
+// trade-off and the crossover where a large diff makes reconciliation lose.
+func runReconcileCollectionDiff(b *testing.B, docCount, diffCount int) {
 	requireSyncBenchEnabled(b)
 	ctx := context.Background()
 	samples := make([]syncSample, 0, b.N)
@@ -186,7 +187,7 @@ func runReconcileCollectionOneDocChanged(b *testing.B, docCount int) {
 		docIDs := seedDocs(ctx, b, srcCol, docCount, 0)
 		connectNodes(ctx, b, recv, src)
 		recv.reconcileCollection(ctx, b, src.peerID(ctx, b)) // untimed: establish shared base
-		applyTail(ctx, b, srcCol, docIDs[:1], 1)             // diverge exactly one doc
+		applyTail(ctx, b, srcCol, docIDs[:diffCount], 1)     // diverge diffCount docs
 
 		srcPeerID := src.peerID(ctx, b)
 		recv.counters.Reset()
@@ -205,19 +206,37 @@ func runReconcileCollectionOneDocChanged(b *testing.B, docCount int) {
 	report(b, samples)
 }
 
-// One divergent doc in a 50-doc collection.
+// Vary collection size with the difference fixed at one doc: reconcile control
+// should grow only ~log(docCount) while the default contrast grows ∝ docCount.
+// Heavier setup at large sizes, so run with -benchtime=1x.
 func Benchmark_Reconcile_Collection_OneDocChanged_docs50(b *testing.B) {
-	runReconcileCollectionOneDocChanged(b, 50)
+	runReconcileCollectionDiff(b, 50, 1)
 }
-
-// One divergent doc in a 100-doc collection (the curve's midpoint).
 func Benchmark_Reconcile_Collection_OneDocChanged_docs100(b *testing.B) {
-	runReconcileCollectionOneDocChanged(b, 100)
+	runReconcileCollectionDiff(b, 100, 1)
+}
+func Benchmark_Reconcile_Collection_OneDocChanged_docs200(b *testing.B) {
+	runReconcileCollectionDiff(b, 200, 1)
+}
+func Benchmark_Reconcile_Collection_OneDocChanged_docs500(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 1)
+}
+func Benchmark_Reconcile_Collection_OneDocChanged_docs1000(b *testing.B) {
+	runReconcileCollectionDiff(b, 1000, 1)
 }
 
-// One divergent doc in a 200-doc collection: the crossover point where the
-// reconcile control cost (flat in docCount) is well below the default broadcast's
-// (which lists all 200 docIDs). Heavier setup, so run with -benchtime=1x.
-func Benchmark_Reconcile_Collection_OneDocChanged_docs200(b *testing.B) {
-	runReconcileCollectionOneDocChanged(b, 200)
+// Vary the difference size with the collection fixed at 500 docs: reconcile control
+// should grow ~O(diff · log n) and eventually cross above the (diff-independent)
+// default broadcast once the diff is a large fraction of the collection.
+func Benchmark_Reconcile_Collection_Diff_docs500_diff10(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 10)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff50(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 50)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff100(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 100)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff250(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 250)
 }

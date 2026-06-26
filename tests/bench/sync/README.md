@@ -42,7 +42,8 @@ runs with the flag on and converges via reconciliation instead of broadcast):
 | `Benchmark_Reconcile_ManyHead_*` / `_SingleDoc_*` | per-document head reconciliation (M1 — per-session overhead, not the asymptotic win) |
 | `Benchmark_Reconcile_Collection_ColdStart_*`      | empty receiver pulls a whole collection in one session (M2) |
 | `Benchmark_Reconcile_Collection_Tail_*`           | shared base, small tail across all docs |
-| `Benchmark_Reconcile_Collection_OneDocChanged_*`  | large shared base, one diverged doc — the asymptotic bandwidth win (control ∝ diff, not collection size) |
+| `Benchmark_Reconcile_Collection_OneDocChanged_*`  | one diverged doc, collection 50→1000 — the size axis: control ~O(log n) vs default O(n) (6.5× gap at 1000 docs) |
+| `Benchmark_Reconcile_Collection_Diff_docs500_*`   | collection fixed at 500, diff 1→250 — the difference axis: control ~O(diff·log n) vs default's flat O(n) |
 
 The `OneDocChanged` pair is the headline contrast: at `docs50` the default
 doc-list is still small, but by `docs200` the reconcile control bytes stay flat

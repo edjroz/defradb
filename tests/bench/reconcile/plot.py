@@ -432,6 +432,39 @@ def main():
             ],
             ylog=False, yfmt=fmt_bytes))
 
+    # 12. The other axis (real nodes): control bytes vs DIFFERENCE size at a fixed
+    # collection (500 docs). Reconciliation is O(diff · log n) — it rises with the
+    # number of changed docs — while default broadcast is O(n), flat in the diff
+    # (it lists every docID regardless). Reconciliation wins while the diff is small
+    # and crosses ABOVE default once the diff is a large fraction of the collection.
+    ds_path = os.path.join(HERE, "data", "measured_diffsweep.csv")
+    if os.path.exists(ds_path):
+        with open(ds_path, newline="") as f:
+            dsrows = list(csv.DictReader(f))
+
+        def dsseries(approach):
+            pts = [(float(r["diff"]), float(r["ctrl_bytes"])) for r in dsrows
+                   if r["approach"] == approach]
+            return sorted(pts)
+
+        dsr = dsseries("reconcile_m2_collection")
+        dsd = dsseries("default_sync")
+        written.append(line_chart(
+            "12_diffsweep_bytes_vs_diff.svg",
+            "Control bytes vs difference size  (collection fixed at 500 docs, real nodes)",
+            "Reconciliation is O(diff·log n) — it grows with the number of changed docs; "
+            "default broadcast is O(n), flat in the diff. They cross when the diff gets large.",
+            "changed documents  (difference size, log scale)",
+            "control bytes",
+            [
+                {"label": "default doc-sync (O(n))", "color": BASELINE_COLOR, "points": dsd, "dashed": True,
+                 "notes": [(dsd[-1][0], dsd[-1][1], fmt_bytes(dsd[-1][1]))] if dsd else []},
+                {"label": "reconcile (O(diff·log n))", "color": NG_COLOR, "points": dsr,
+                 "notes": [(dsr[0][0], dsr[0][1], fmt_bytes(dsr[0][1])),
+                           (dsr[-1][0], dsr[-1][1], fmt_bytes(dsr[-1][1]))] if dsr else []},
+            ],
+            xlog=True, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_bytes))
+
     # index.html
     cards = "\n".join(
         f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
@@ -459,11 +492,17 @@ bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
 doc-sync (one session per document), with identical payload. <b>Charts 7&ndash;8</b>
 show M2's per-collection batching collapsing that per-document overhead back to
-~broadcast levels. <b>Chart&nbsp;9</b> is the payoff measured on real nodes: with one
-changed document in a growing collection, default doc-sync's control traffic rises
-with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
-reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
-the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
+~broadcast levels. <b>Charts&nbsp;9&nbsp;&amp;&nbsp;12</b> are the payoff, measured on real nodes
+across <b>both axes</b> of O(diff&middot;log&nbsp;n) vs O(n). <b>Chart&nbsp;9</b>
+fixes the diff at one doc and grows the collection 50&rarr;1000: default control
+climbs linearly (<b>2.1KB&rarr;42KB</b>, ~42&nbsp;B/doc) while reconciliation stays
+nearly flat (<b>2.7KB&rarr;6.4KB</b>, log&nbsp;n) &mdash; a <b>6.5&times; gap at
+1000 docs</b>. <b>Chart&nbsp;12</b> fixes the collection at 500 docs and grows the
+difference: default is <b>flat at 21KB</b> (it lists every docID regardless), while
+reconciliation rises with the diff (<b>5.3KB&rarr;14.9KB</b> from 1 to 250 changed
+docs). Reconciliation still wins at <b>half the collection changed</b> (250/500);
+the crossover where a large diff makes it lose is beyond that &mdash; the measured
+analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
 always-on ordered-index write adds only a small per-commit overhead.
 <b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
 LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc

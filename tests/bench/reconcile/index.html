@@ -22,11 +22,17 @@ bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md
 per-document scale reconciliation costs <i>more</i> control traffic than broadcast
 doc-sync (one session per document), with identical payload. <b>Charts 7&ndash;8</b>
 show M2's per-collection batching collapsing that per-document overhead back to
-~broadcast levels. <b>Chart&nbsp;9</b> is the payoff measured on real nodes: with one
-changed document in a growing collection, default doc-sync's control traffic rises
-with the collection size (2.1KB&rarr;8.4KB from 50 to 200 docs) while
-reconciliation stays roughly flat (2.7KB&rarr;4.5KB) and <b>crosses below</b> it &mdash;
-the O(diff) win, not just modelled. <b>Chart&nbsp;10</b> is the cost side: the
+~broadcast levels. <b>Charts&nbsp;9&nbsp;&amp;&nbsp;12</b> are the payoff, measured on real nodes
+across <b>both axes</b> of O(diff&middot;log&nbsp;n) vs O(n). <b>Chart&nbsp;9</b>
+fixes the diff at one doc and grows the collection 50&rarr;1000: default control
+climbs linearly (<b>2.1KB&rarr;42KB</b>, ~42&nbsp;B/doc) while reconciliation stays
+nearly flat (<b>2.7KB&rarr;6.4KB</b>, log&nbsp;n) &mdash; a <b>6.5&times; gap at
+1000 docs</b>. <b>Chart&nbsp;12</b> fixes the collection at 500 docs and grows the
+difference: default is <b>flat at 21KB</b> (it lists every docID regardless), while
+reconciliation rises with the diff (<b>5.3KB&rarr;14.9KB</b> from 1 to 250 changed
+docs). Reconciliation still wins at <b>half the collection changed</b> (250/500);
+the crossover where a large diff makes it lose is beyond that &mdash; the measured
+analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
 always-on ordered-index write adds only a small per-commit overhead.
 <b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
 LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
@@ -45,4 +51,5 @@ devices. See <code>tests/bench/reconcile/README.md</code> and
 <figure><img src="plots/09_tinydiff_bytes_vs_docs.svg" alt="09_tinydiff_bytes_vs_docs.svg"/></figure>
 <figure><img src="plots/10_indexwrite_cost.svg" alt="10_indexwrite_cost.svg"/></figure>
 <figure><img src="plots/11_crossdevice_validation.svg" alt="11_crossdevice_validation.svg"/></figure>
+<figure><img src="plots/12_diffsweep_bytes_vs_diff.svg" alt="12_diffsweep_bytes_vs_diff.svg"/></figure>
 </body></html>

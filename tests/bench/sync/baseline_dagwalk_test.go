@@ -132,14 +132,13 @@ func runManyHead(b *testing.B, docCount, baseUpdates, k int) {
 	report(b, samples)
 }
 
-// runSyncOneDocChanged is the default-broadcast contrast to
-// runReconcileCollectionOneDocChanged: a docCount-document shared base, exactly one
-// doc diverged by one commit, converged via SyncDocuments. Only one merge lands,
-// but the sync request must enumerate ALL docCount docIDs (it cannot know which one
-// changed), so the control cost scales with the collection size while the
-// reconcile path's tracks the single-block diff. Measuring both at docCount 50 and
-// 200 shows the crossover.
-func runSyncOneDocChanged(b *testing.B, docCount int) {
+// runSyncDiff is the default-broadcast contrast to runReconcileCollectionDiff: a
+// docCount-document shared base, diffCount docs diverged by one commit, converged
+// via SyncDocuments. diffCount merges land, but the sync request must enumerate ALL
+// docCount docIDs (it cannot know which changed), so the control cost scales with
+// the collection size and is independent of diffCount — the O(n) baseline against
+// which reconciliation's O(diff·log n) is compared.
+func runSyncDiff(b *testing.B, docCount, diffCount int) {
 	requireSyncBenchEnabled(b)
 	ctx := context.Background()
 	samples := make([]syncSample, 0, b.N)
@@ -152,14 +151,14 @@ func runSyncOneDocChanged(b *testing.B, docCount int) {
 		recv.addCollection(ctx, b)
 		docIDs := seedDocs(ctx, b, srcCol, docCount, 0)
 		connectNodes(ctx, b, recv, src)
-		recv.measuredSync(ctx, b, docIDs, docCount) // untimed: establish shared base
-		applyTail(ctx, b, srcCol, docIDs[:1], 1)    // diverge exactly one doc
+		recv.measuredSync(ctx, b, docIDs, docCount)      // untimed: establish shared base
+		applyTail(ctx, b, srcCol, docIDs[:diffCount], 1) // diverge diffCount docs
 
 		recv.counters.Reset()
 		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
 		heapBefore := heapAllocMiB()
 		b.StartTimer()
-		dur := recv.measuredSync(ctx, b, docIDs, 1) // all docIDs listed, one merge expected
+		dur := recv.measuredSync(ctx, b, docIDs, diffCount) // all docIDs listed, diffCount merges
 		b.StopTimer()
 
 		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
@@ -171,11 +170,18 @@ func runSyncOneDocChanged(b *testing.B, docCount int) {
 	report(b, samples)
 }
 
-// Default-broadcast contrasts to the OneDocChanged reconcile benchmarks. Run the
-// docs200 case with -benchtime=1x.
-func Benchmark_Sync_OneDocChanged_docs50(b *testing.B)  { runSyncOneDocChanged(b, 50) }
-func Benchmark_Sync_OneDocChanged_docs100(b *testing.B) { runSyncOneDocChanged(b, 100) }
-func Benchmark_Sync_OneDocChanged_docs200(b *testing.B) { runSyncOneDocChanged(b, 200) }
+// Default-broadcast contrasts. Vary collection size (diff fixed at 1): control ∝ docCount.
+func Benchmark_Sync_OneDocChanged_docs50(b *testing.B)   { runSyncDiff(b, 50, 1) }
+func Benchmark_Sync_OneDocChanged_docs100(b *testing.B)  { runSyncDiff(b, 100, 1) }
+func Benchmark_Sync_OneDocChanged_docs200(b *testing.B)  { runSyncDiff(b, 200, 1) }
+func Benchmark_Sync_OneDocChanged_docs500(b *testing.B)  { runSyncDiff(b, 500, 1) }
+func Benchmark_Sync_OneDocChanged_docs1000(b *testing.B) { runSyncDiff(b, 1000, 1) }
+
+// Vary the difference size (collection fixed at 500): control stays ~flat in diff.
+func Benchmark_Sync_Diff_docs500_diff10(b *testing.B)  { runSyncDiff(b, 500, 10) }
+func Benchmark_Sync_Diff_docs500_diff50(b *testing.B)  { runSyncDiff(b, 500, 50) }
+func Benchmark_Sync_Diff_docs500_diff100(b *testing.B) { runSyncDiff(b, 500, 100) }
+func Benchmark_Sync_Diff_docs500_diff250(b *testing.B) { runSyncDiff(b, 500, 250) }
 
 // sampleReceiver snapshots the receiver's counters and blockstore growth.
 func sampleReceiver(

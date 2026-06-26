@@ -29,8 +29,13 @@ import (
 )
 
 const (
-	// syncTimeout bounds a single sync attempt.
-	syncTimeout = 30 * time.Second
+	// syncTimeout bounds a single sync attempt. It must cover establishing a large
+	// shared base (the untimed setup), which over loopback costs ~20ms/block, so a
+	// 500–1000 doc base needs well over the original 30s. It bounds setup and the
+	// timed op alike; a generous value only delays a genuine hang, so it is set high
+	// to let the large-collection sweeps (docs500/docs1000) converge their base.
+	// The default-sync 1000-doc base is the slowest (~370s of per-doc broadcast pull).
+	syncTimeout = 15 * time.Minute
 	// meshSettle gives the gossipsub topic mesh time to form after a transport
 	// connection is established, before document sync is attempted. This happens
 	// in untimed setup, so a generous value only affects setup wall-clock.
