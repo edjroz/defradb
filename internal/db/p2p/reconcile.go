@@ -54,7 +54,7 @@ func (proc *reconcileCommProcessor) ProcessRequest(
 	ctx, cancel := context.WithTimeout(ctx, networkRequestTimeout)
 	defer cancel()
 
-	local, err := proc.p2p.localVectorForScope(ctx, req.Scope)
+	local, err := proc.p2p.localStorageForScope(ctx, req.Scope)
 	if err != nil {
 		return protocol.ReconcileMessage{}, err
 	}
@@ -62,13 +62,13 @@ func (proc *reconcileCommProcessor) ProcessRequest(
 	return respondReconcile(local, req)
 }
 
-// localVectorForScope builds the local reconciliation set for a scope.
-func (p *P2P) localVectorForScope(ctx context.Context, scope protocol.ReconcileScope) (*negentropy.Vector, error) {
+// localStorageForScope builds the local reconciliation set for a scope.
+func (p *P2P) localStorageForScope(ctx context.Context, scope protocol.ReconcileScope) (negentropy.Storage, error) {
 	switch scope.Kind {
 	case protocol.ScopeDocHeads:
 		return p.localVectorForDoc(ctx, scope.ID)
 	case protocol.ScopeCollectionBlocks:
-		return p.localVectorForCollection(ctx, scope.ID)
+		return p.localStorageForCollection(ctx, scope.ID)
 	default:
 		return nil, NewErrUnsupportedReconcileScope(scope.Kind)
 	}
@@ -125,11 +125,15 @@ func (p *P2P) collectionShortID(ctx context.Context, collectionID string) (uint3
 	return dbid.GetUncachedShortCollectionID(ctx, collectionID, p.db.Multistore().Systemstore())
 }
 
-// localVectorForCollection builds the reconciliation set for a collection: every
+// localStorageForCollection builds the reconciliation set for a collection: every
 // composite block CID recorded in the maintained reconcile index, ordered by real
 // CRDT height then CID. Both peers store the same (height, cid) per shared block, so
 // the sort keys agree cross-peer.
-func (p *P2P) localVectorForCollection(ctx context.Context, collectionID string) (*negentropy.Vector, error) {
+//
+// It returns a [negentropy.SegmentTree] (built once from the index) so the many
+// per-range fingerprints during the multi-round session are O(log n) rather than the
+// Vector's O(n) scan.
+func (p *P2P) localStorageForCollection(ctx context.Context, collectionID string) (negentropy.Storage, error) {
 	shortID, err := p.collectionShortID(ctx, collectionID)
 	if err != nil {
 		return nil, err
@@ -143,7 +147,7 @@ func (p *P2P) localVectorForCollection(ctx context.Context, collectionID string)
 		return nil, err
 	}
 
-	builder := negentropy.NewVectorBuilder(0)
+	builder := negentropy.NewSegmentTreeBuilder(0)
 	for {
 		hasNext, err := iter.Next()
 		if err != nil {
@@ -274,7 +278,7 @@ func (p *P2P) ReconcileCollection(
 	sessionCtx, cancel := context.WithTimeout(ctx, reconcileSessionTimeout)
 	defer cancel()
 
-	local, err := p.localVectorForCollection(sessionCtx, collectionID)
+	local, err := p.localStorageForCollection(sessionCtx, collectionID)
 	if err != nil {
 		return err
 	}
