@@ -41,6 +41,7 @@ func NewDefraCommand(ctx context.Context) *cobra.Command {
 		MakeP2PCollectionListCommand(ctx),
 		MakeP2PCollectionSyncVersionsCommand(ctx),
 		MakeP2PCollectionSyncBranchableCommand(ctx),
+		MakeP2PCollectionReconcileCommand(ctx),
 	)
 
 	p2p_document := MakeP2PDocumentCommand(ctx)

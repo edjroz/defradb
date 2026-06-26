@@ -368,6 +368,16 @@ func (w *CWrapper) ReconcileDocument(
 	return errors.New("ReconcileDocument is not implemented in the C bindings")
 }
 
+// ReconcileCollection is not yet wired through the C bindings (see ReconcileDocument).
+func (w *CWrapper) ReconcileCollection(
+	_ context.Context,
+	_ string,
+	_ string,
+	_ ...options.Enumerable[options.ReconcileCollectionOptions],
+) error {
+	return errors.New("ReconcileCollection is not implemented in the C bindings")
+}
+
 func (w *CWrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

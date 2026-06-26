@@ -345,6 +345,28 @@ func (w *Wrapper) ReconcileDocument(
 	return err
 }
 
+func (w *Wrapper) ReconcileCollection(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	opts ...options.Enumerable[options.ReconcileCollectionOptions],
+) error {
+	args := []string{"client", "p2p", "collection", "reconcile"}
+
+	opt := utils.NewOptions(opts...)
+	args = appendIdentityArg(args, opt.GetIdentity())
+
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline {
+		args = append(args, "--timeout", time.Until(deadline).String())
+	}
+
+	args = append(args, peerID, collectionName)
+
+	_, err := w.cmd.execute(ctx, args)
+	return err
+}
+
 func (w *Wrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

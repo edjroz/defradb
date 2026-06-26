@@ -133,6 +133,19 @@ type P2P interface {
 		opts ...options.Enumerable[options.ReconcileDocumentOptions],
 	) error
 
+	// ReconcileCollection runs range-based set reconciliation against the given peer
+	// over the full set of composite block CIDs in a collection, converging the local
+	// node by fetching and merging the blocks it is missing. It is the O(diff)
+	// cold-start/catch-up path of the experimental, default-off set-reconciliation
+	// protocol and returns an error if that protocol is not enabled on the node.
+	// context.WithTimeout can be used to set a timeout for the operation.
+	ReconcileCollection(
+		ctx context.Context,
+		peerID string,
+		collectionName string,
+		opts ...options.Enumerable[options.ReconcileCollectionOptions],
+	) error
+
 	// SyncCollectionVersions synchronizes the given collection versions to local node.
 	//
 	// It will not complete until a version is found, so it is strongly recommended

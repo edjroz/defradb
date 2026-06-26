@@ -535,3 +535,32 @@ func (b *ReconcileDocumentOptionsBuilder) SetIdentity(id identity.Identity) *Rec
 	})
 	return b
 }
+
+// ReconcileCollectionOptions contains options for ReconcileCollection operation.
+type ReconcileCollectionOptions struct {
+	// Identity is the identity of the actor performing the operation.
+	Identity immutable.Option[identity.Identity]
+}
+
+// GetIdentity returns the identity for the operation.
+func (o *ReconcileCollectionOptions) GetIdentity() immutable.Option[identity.Identity] {
+	return o.Identity
+}
+
+// ReconcileCollectionOptionsBuilder is a builder for ReconcileCollectionOptions.
+type ReconcileCollectionOptionsBuilder struct {
+	enumerableBuilder[ReconcileCollectionOptions]
+}
+
+// ReconcileCollection creates a new ReconcileCollectionOptionsBuilder instance.
+func ReconcileCollection() *ReconcileCollectionOptionsBuilder {
+	return &ReconcileCollectionOptionsBuilder{}
+}
+
+// SetIdentity sets the identity for the operation.
+func (b *ReconcileCollectionOptionsBuilder) SetIdentity(id identity.Identity) *ReconcileCollectionOptionsBuilder {
+	b.append(func(opts *ReconcileCollectionOptions) {
+		opts.Identity = immutable.Some(id)
+	})
+	return b
+}

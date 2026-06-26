@@ -179,6 +179,15 @@ func (w *Wrapper) ReconcileDocument(
 	return w.client.ReconcileDocument(ctx, peerID, collectionName, docID, opts...)
 }
 
+func (w *Wrapper) ReconcileCollection(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	opts ...options.Enumerable[options.ReconcileCollectionOptions],
+) error {
+	return w.client.ReconcileCollection(ctx, peerID, collectionName, opts...)
+}
+
 func (w *Wrapper) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,

@@ -411,6 +411,47 @@ func (c *Client) ReconcileDocument(
 	return err
 }
 
+func (c *Client) ReconcileCollection(
+	ctx context.Context,
+	peerID string,
+	collectionName string,
+	opts ...options.Enumerable[options.ReconcileCollectionOptions],
+) error {
+	opt := utils.NewOptions(opts...)
+	ctx = identity.WithContext(ctx, opt.GetIdentity())
+
+	methodURL := c.http.apiURL.JoinPath("p2p", "collections", "reconcile")
+
+	req := map[string]any{
+		"peerID":         peerID,
+		"collectionName": collectionName,
+	}
+
+	deadline, hasDeadline := ctx.Deadline()
+	if hasDeadline {
+		req["timeout"] = time.Until(deadline).String()
+	}
+	body, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	httpCtx := identity.WithContext(context.Background(), opt.GetIdentity())
+	if hasDeadline {
+		var cancel context.CancelFunc
+		httpCtx, cancel = context.WithTimeout(httpCtx, time.Until(deadline)+500*time.Millisecond)
+		defer cancel()
+	}
+
+	httpReq, err := http.NewRequestWithContext(httpCtx, http.MethodPost, methodURL.String(), bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	_, err = c.http.request(httpReq)
+	return err
+}
+
 func (c *Client) SyncCollectionVersions(
 	ctx context.Context,
 	versionIDs []string,
