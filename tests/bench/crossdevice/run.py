@@ -272,9 +272,18 @@ def drive_to_fixpoint(mode, nodes, edges, all_docids, max_rounds, settle):
     while rounds < max_rounds:
         rounds += 1
         if mode == "ranges":
-            # One reconcile per edge converges both endpoints (bidirectional push).
+            # Reconcile BOTH directions per edge so each node PULLS its own need —
+            # the same convergence the on-connect auto-trigger drives in production.
+            # The manual API also pushes the have-set after pulling; that push can
+            # 500 on an awkward set (stream reset), but the pull has already merged
+            # by then, so swallow it (mirrors _untimed_base) and let the reverse
+            # direction's pull converge the edge.
             for i, j in edges:
-                nodes[i].post("/reconcile", {"peerID": nodes[j].peer_id, "collection": COLLECTION})
+                for a, b in ((i, j), (j, i)):
+                    try:
+                        nodes[a].post("/reconcile", {"peerID": nodes[b].peer_id, "collection": COLLECTION})
+                    except urllib.error.HTTPError:
+                        pass
         else:
             # Default broadcast: every node pulls the global docID list from its
             # neighbours. The list must be supplied — the default path cannot
