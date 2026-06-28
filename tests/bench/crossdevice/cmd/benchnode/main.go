@@ -158,6 +158,7 @@ func (s *server) routes(mux *http.ServeMux) {
 	mux.HandleFunc("/counters", s.handleCounters)
 	mux.HandleFunc("/counters/reset", s.handleCountersReset)
 	mux.HandleFunc("/blockstats", s.handleBlockstats)
+	mux.HandleFunc("/query", s.handleQuery)
 }
 
 // --- handlers -------------------------------------------------------------
@@ -356,6 +357,28 @@ func (s *server) handleBlockstats(w http.ResponseWriter, r *http.Request) {
 		bytes += int64(len(blk.RawData()))
 	}
 	writeJSON(w, map[string]any{"blocks": count, "blockBytes": bytes})
+}
+
+// handleQuery runs a GraphQL read request against the node's DB and returns its
+// data. The orchestrator queries every node with the same request after
+// convergence and asserts the results are identical — a document-level state
+// check that is strictly stronger than the block-count equality of
+// /blockstats (same blocks present does not by itself prove the same documents
+// resolve). It is read-only; the node identity set at startup flows via the
+// request context for any ACP checks.
+func (s *server) handleQuery(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Query string `json:"query"`
+	}
+	if !decode(w, r, &req) {
+		return
+	}
+	res := s.db.ExecRequest(r.Context(), req.Query)
+	if len(res.GQL.Errors) > 0 {
+		writeErr(w, res.GQL.Errors[0])
+		return
+	}
+	writeJSON(w, map[string]any{"data": res.GQL.Data})
 }
 
 // --- helpers --------------------------------------------------------------

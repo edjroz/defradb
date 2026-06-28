@@ -44,6 +44,10 @@ import urllib.request
 
 COLLECTION = "Item"
 SCHEMA_SDL = "type Item {\n\tname: String\n\tvalue: Int\n}\n"
+# Document-state probe: every node must resolve the identical set of documents
+# after convergence. Selects stable fields only; the orchestrator normalises the
+# result order-independently (keyed by _docID) before comparing.
+STATE_QUERY = "query { " + COLLECTION + " { _docID name value } }"
 
 REPO_BENCHNODE_PKG = "./tests/bench/crossdevice/cmd/benchnode"
 
@@ -78,6 +82,10 @@ class Node:
 
     def post(self, path, obj, timeout=120):
         return _req(self.control_url + path, obj, timeout)
+
+    def query(self, q=None, timeout=60):
+        """Run a GraphQL read against the node and return its `data` payload."""
+        return self.post("/query", {"query": q or STATE_QUERY}, timeout)["data"]
 
     def wait_ready(self, timeout=20):
         deadline = time.time() + timeout
@@ -216,6 +224,39 @@ def all_equal(stats):
     return all((s["blocks"], s["blockBytes"]) == first for s in stats)
 
 
+def _docset(data):
+    """Normalise a /query result into an order-independent {docID: {field: val}}
+    map. GraphQL list order is not guaranteed equal across nodes, so the set —
+    not the sequence — is what must match."""
+    docs = (data or {}).get(COLLECTION) or []
+    return {d.get("_docID"): {k: v for k, v in d.items() if k != "_docID"} for d in docs}
+
+
+def assert_shared_state(nodes):
+    """After convergence, every node must resolve the IDENTICAL document set —
+    a document-level correctness check stronger than block-count equality.
+    Raises RuntimeError naming the diverging docIDs on any mismatch. Returns a
+    per-node list of booleans (all True on success) for the CSV `stateMatch`
+    column."""
+    sets = [_docset(nd.query()) for nd in nodes]
+    ref = sets[0]
+    matches = [True] * len(nodes)
+    diffs = []
+    for i in range(1, len(nodes)):
+        if sets[i] != ref:
+            matches[0] = matches[i] = False
+            only_ref = sorted(set(ref) - set(sets[i]))
+            only_i = sorted(set(sets[i]) - set(ref))
+            changed = sorted(k for k in set(ref) & set(sets[i]) if ref[k] != sets[i][k])
+            diffs.append(
+                f"node0 vs node{nodes[i].index}: "
+                f"missing_on_{nodes[i].index}={only_ref} missing_on_0={only_i} differing={changed}"
+            )
+    if diffs:
+        raise RuntimeError("nodes diverged in document state after convergence: " + " | ".join(diffs))
+    return matches
+
+
 def connect_edges(nodes, edges, settle):
     for i, j in edges:
         nodes[i].post("/connect", {"addrs": nodes[j].addrs})
@@ -337,8 +378,11 @@ def run_mode(mode, n, edges, scenario, docs, binary, devices, settle, max_rounds
         for nd in nodes:
             nd.post("/counters/reset", {})
         rounds, wall_ms, converged = drive_to_fixpoint(mode, nodes, edges, all_docids, max_rounds, settle)
+        # Once data is retrieved, ensure the nodes actually share document state —
+        # not just an equal block count. Only meaningful once blocks converged.
+        state_match = assert_shared_state(nodes) if converged else [False] * len(nodes)
         rows = []
-        for nd in nodes:
+        for pos, nd in enumerate(nodes):
             c = nd.get("/counters")
             bs = nd.get("/blockstats")
             rows.append({
@@ -347,6 +391,7 @@ def run_mode(mode, n, edges, scenario, docs, binary, devices, settle, max_rounds
                 "ctrlMsgs": c["totalMsgsSent"] + c["totalMsgsRecv"],
                 "blocks": bs["blocks"], "blockBytes": bs["blockBytes"],
                 "wallMs": round(wall_ms, 1), "rounds": rounds, "converged": converged,
+                "stateMatch": state_match[pos],
             })
         return rows, converged
     finally:
@@ -413,8 +458,9 @@ def main():
         net_msgs = sum(r["ctrlMsgs"] for r in rows)
         wall = rows[0]["wallMs"] if rows else 0
         rounds = rows[0]["rounds"] if rows else 0
-        summary[mode] = (net_ctrl, net_msgs, wall, rounds, converged)
-        print(f"  converged={converged} rounds={rounds} wallMs={wall} "
+        state_ok = all(r["stateMatch"] for r in rows)
+        summary[mode] = (net_ctrl, net_msgs, wall, rounds, converged, state_ok)
+        print(f"  converged={converged} stateMatch={state_ok} rounds={rounds} wallMs={wall} "
               f"netCtrlBytes={net_ctrl} netCtrlMsgs={net_msgs}")
         for r in rows:
             all_rows.append({"topology": topo_name, "N": n, "scenario": args.scenario,
@@ -427,7 +473,8 @@ def main():
 
 def _write_csv(path, rows):
     cols = ["topology", "N", "scenario", "mode", "nodeID", "ctrlBytesSent",
-            "ctrlBytesRecv", "ctrlMsgs", "blocks", "blockBytes", "wallMs", "rounds", "converged"]
+            "ctrlBytesRecv", "ctrlMsgs", "blocks", "blockBytes", "wallMs", "rounds",
+            "converged", "stateMatch"]
     with open(path, "w") as f:
         f.write(",".join(cols) + "\n")
         for r in rows:
@@ -436,9 +483,9 @@ def _write_csv(path, rows):
 
 def _print_summary(label, summary):
     print(f"\n--- summary: {label} ---")
-    print(f"{'mode':<10} {'netCtrlBytes':>14} {'netCtrlMsgs':>12} {'wallMs':>10} {'rounds':>7} {'converged':>10}")
-    for mode, (ctrl, msgs, wall, rounds, conv) in summary.items():
-        print(f"{mode:<10} {ctrl:>14} {msgs:>12} {wall:>10} {rounds:>7} {str(conv):>10}")
+    print(f"{'mode':<10} {'netCtrlBytes':>14} {'netCtrlMsgs':>12} {'wallMs':>10} {'rounds':>7} {'converged':>10} {'stateMatch':>11}")
+    for mode, (ctrl, msgs, wall, rounds, conv, state_ok) in summary.items():
+        print(f"{mode:<10} {ctrl:>14} {msgs:>12} {wall:>10} {rounds:>7} {str(conv):>10} {str(state_ok):>11}")
     if "ranges" in summary and "default" in summary:
         r, d = summary["ranges"][0], summary["default"][0]
         if r > 0:

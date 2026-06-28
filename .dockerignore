@@ -1,0 +1,9 @@
+# Keep the build context small for the crossdevice benchnode image
+# (tests/bench/crossdevice/docker/Dockerfile). Only Go source + go.mod/go.sum are
+# needed to build; everything below is irrelevant to the build.
+.git
+**/.bin
+.plans
+*.zip
+tests/bench/crossdevice/results
+tests/bench/crossdevice/docker

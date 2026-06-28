@@ -1,0 +1,58 @@
+# Two benchnodes on one host for the set-reconciliation benchmark — deterministic,
+# minimal networking on a single user-defined bridge. The orchestrator (run.py)
+# runs on the HOST and drives the nodes over their published control ports; the
+# libp2p p2p port stays internal to the bridge.
+#
+# Build the image first (from the repo root), then drive with compose-run.sh:
+#   docker build -f tests/bench/crossdevice/docker/Dockerfile -t benchnode:local .
+#
+# $RECON selects the mode and is interpolated by compose from the environment:
+#   ranges  -> RECON=--reconciliation   (both nodes speak reconciliation)
+#   default -> RECON=                    (plain SyncDocuments baseline)
+# A node carries one mode for its lifetime, so re-create the stack (down -v + up)
+# with the matching $RECON between the ranges and default passes — compose-run.sh
+# handles that.
+
+name: benchnode-crossdevice
+
+services:
+  node0:
+    image: benchnode:local
+    # sh -c so the (possibly empty) $RECON arg word-splits cleanly.
+    entrypoint: ["sh", "-c"]
+    command: ["benchnode --control 0.0.0.0:17700 --p2p /ip4/0.0.0.0/tcp/9300 --store badger=/data ${RECON-}"]
+    ports:
+      # control only, host-loopback bound; p2p (9300) is NOT published.
+      - "127.0.0.1:17701:17700"
+    volumes:
+      - node0-data:/data
+    networks: [benchnet]
+    healthcheck:
+      # /peerinfo answers only once the libp2p host has finished starting.
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:17700/peerinfo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  node1:
+    image: benchnode:local
+    entrypoint: ["sh", "-c"]
+    command: ["benchnode --control 0.0.0.0:17700 --p2p /ip4/0.0.0.0/tcp/9300 --store badger=/data ${RECON-}"]
+    ports:
+      - "127.0.0.1:17702:17700"
+    volumes:
+      - node1-data:/data
+    networks: [benchnet]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:17700/peerinfo"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  node0-data:
+  node1-data:
+
+networks:
+  benchnet:
+    driver: bridge
