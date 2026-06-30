@@ -45,6 +45,19 @@ func blockstoreStats(ctx context.Context, tb testing.TB, sn *syncNode) (count in
 	return count, bytes
 }
 
+// assertConverged fails the benchmark unless the receiver and source hold the same
+// number of DAG blocks — i.e. set reconciliation drove both nodes to an identical
+// block set. The reconcile benchmarks otherwise only measure cost; this is the
+// correctness guard that the measured session actually converged. Call it outside
+// the timed region (it enumerates both blockstores).
+func assertConverged(ctx context.Context, tb testing.TB, src, recv *syncNode) {
+	tb.Helper()
+	srcBlocks, _ := blockstoreStats(ctx, tb, src)
+	recvBlocks, _ := blockstoreStats(ctx, tb, recv)
+	require.Equal(tb, srcBlocks, recvBlocks,
+		"reconciliation did not converge: source holds %d blocks, receiver holds %d", srcBlocks, recvBlocks)
+}
+
 // heapAllocMiB returns the current heap allocation in MiB after a GC, for a
 // stable (if coarse) memory reading around the timed region.
 func heapAllocMiB() float64 {

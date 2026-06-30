@@ -56,6 +56,7 @@ func runReconcileManyHead(b *testing.B, docCount, baseUpdates, k int) {
 		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
 		s.syncMs = float64(dur.Microseconds()) / 1000
 		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
 		recv.close(ctx)
 		src.close(ctx)
 	}
@@ -72,6 +73,62 @@ func Benchmark_Reconcile_ManyHead_docs10_base5_k3(b *testing.B) {
 // round-trips with no per-document amortization.
 func Benchmark_Reconcile_SingleDoc_base5_k3(b *testing.B) {
 	runReconcileManyHead(b, 1, 5, 3)
+}
+
+// Deep two-sided fork: both nodes extend an independent k=50 branch per doc off a
+// shared base, then reconcile. Stresses deep multi-head merge and conflict
+// resolution, not just the per-session overhead the k=3 cases measure.
+func Benchmark_Reconcile_ManyHead_docs10_base5_k50(b *testing.B) {
+	runReconcileManyHead(b, 10, 5, 50)
+}
+
+// A single document forked deeply on both sides — isolates the deep-fork
+// merge/fetch cost with no per-document amortization.
+func Benchmark_Reconcile_SingleDoc_DeepFork_base5_k50(b *testing.B) {
+	runReconcileManyHead(b, 1, 5, 50)
+}
+
+// runReconcileDeepLinearDoc measures pulling one long one-sided linear chain over the
+// document-heads scope: the source seeds a single doc with `depth` sequential
+// commits, the receiver has the collection but not the doc, and reconciliation pulls
+// the whole chain (fetch + merge in causal order via the DAG-sync path). This is the
+// deep linear counterpart to the (shallow, two-sided) ManyHead fork.
+func runReconcileDeepLinearDoc(b *testing.B, depth int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false, withReconciliation)
+		recv := startSyncNode(ctx, b, true, withReconciliation)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		docIDs := seedDocs(ctx, b, srcCol, 1, depth) // one doc, depth-deep linear chain
+		connectNodes(ctx, b, recv, src)
+
+		srcPeerID := src.peerID(ctx, b)
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.reconcileDocs(ctx, b, srcPeerID, docIDs)
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+// A single document with a deep (50-commit) one-sided history pulled over the
+// document-heads scope.
+func Benchmark_Reconcile_DeepLinearDoc_depth50(b *testing.B) {
+	runReconcileDeepLinearDoc(b, 50)
 }
 
 // runReconcileCollectionColdStart converges an empty receiver over a whole
@@ -105,6 +162,7 @@ func runReconcileCollectionColdStart(b *testing.B, docCount, updatesPerDoc int) 
 		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
 		s.syncMs = float64(dur.Microseconds()) / 1000
 		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
 		recv.close(ctx)
 		src.close(ctx)
 	}
@@ -152,6 +210,7 @@ func runReconcileCollectionTail(b *testing.B, docCount, baseUpdates, tail int) {
 		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
 		s.syncMs = float64(dur.Microseconds()) / 1000
 		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
 		recv.close(ctx)
 		src.close(ctx)
 	}
@@ -162,6 +221,12 @@ func runReconcileCollectionTail(b *testing.B, docCount, baseUpdates, tail int) {
 // cost tracks the diff rather than the collection size.
 func Benchmark_Reconcile_Collection_Tail_docs50_base2_tail1(b *testing.B) {
 	runReconcileCollectionTail(b, 50, 2, 1)
+}
+
+// One document, deep one-sided tail: a single long divergent branch the receiver
+// pulls in one collection-scope session — the deep-linear collection counterpart.
+func Benchmark_Reconcile_Collection_DeepTail_docs1_base0_tail50(b *testing.B) {
+	runReconcileCollectionTail(b, 1, 0, 50)
 }
 
 // runReconcileCollectionDiff is the asymptotic-win measurement: a shared base of
@@ -200,6 +265,7 @@ func runReconcileCollectionDiff(b *testing.B, docCount, diffCount int) {
 		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
 		s.syncMs = float64(dur.Microseconds()) / 1000
 		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
 		recv.close(ctx)
 		src.close(ctx)
 	}
