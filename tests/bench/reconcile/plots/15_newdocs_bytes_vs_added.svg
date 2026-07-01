@@ -1,49 +1,49 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
-<rect width="880" height="470" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="480" viewBox="0 0 880 480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="480" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes vs difference size — brand-NEW docs (500 base, real nodes)</text>
 <text x="78" y="44" font-size="12" fill="#666">Measured mirror of chart 3: the diff is new documents, so the default's docID list grows too. Both rise — default O(base+new), reconcile O(new·log n).</text>
-<line x1="78" y1="406.0" x2="630" y2="406.0" stroke="#e6e6e6"/>
-<text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">5KB</text>
-<line x1="78" y1="336.0" x2="630" y2="336.0" stroke="#e6e6e6"/>
-<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">13KB</text>
-<line x1="78" y1="266.0" x2="630" y2="266.0" stroke="#e6e6e6"/>
-<text x="70" y="270.0" font-size="11" fill="#444444" text-anchor="end">20KB</text>
-<line x1="78" y1="196.0" x2="630" y2="196.0" stroke="#e6e6e6"/>
-<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">28KB</text>
-<line x1="78" y1="126.0" x2="630" y2="126.0" stroke="#e6e6e6"/>
-<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">35KB</text>
-<line x1="78" y1="56.0" x2="630" y2="56.0" stroke="#e6e6e6"/>
-<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">42KB</text>
-<line x1="78.0" y1="56" x2="78.0" y2="406" stroke="#e6e6e6"/>
-<text x="78.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">1</text>
-<line x1="282.5" y1="56" x2="282.5" y2="406" stroke="#e6e6e6"/>
-<text x="282.5" y="424.0" font-size="11" fill="#444444" text-anchor="middle">10</text>
-<line x1="487.0" y1="56" x2="487.0" y2="406" stroke="#e6e6e6"/>
-<text x="487.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">100</text>
-<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
-<line x1="78" y1="406" x2="630" y2="406" stroke="#444444"/>
-<text x="354" y="452" font-size="12" fill="#222222" text-anchor="middle">new documents added  (difference size, log scale)</text>
-<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">control bytes</text>
-<polyline points="78.0,256.9 282.5,253.3 425.5,237.5 487.0,217.7 568.4,158.3 630.0,59.3" fill="none" stroke="#d1495b" stroke-width="2.5" stroke-dasharray="6 4"/>
-<circle cx="78.0" cy="256.9" r="3.4" fill="#d1495b"/>
-<circle cx="282.5" cy="253.3" r="3.4" fill="#d1495b"/>
-<circle cx="425.5" cy="237.5" r="3.4" fill="#d1495b"/>
-<circle cx="487.0" cy="217.7" r="3.4" fill="#d1495b"/>
-<circle cx="568.4" cy="158.3" r="3.4" fill="#d1495b"/>
-<circle cx="630.0" cy="59.3" r="3.4" fill="#d1495b"/>
-<polyline points="78.0,406.0 282.5,312.7 425.5,217.2 487.0,199.3 568.4,145.5 630.0,56.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
-<circle cx="78.0" cy="406.0" r="3.4" fill="#2e86ab"/>
-<circle cx="282.5" cy="312.7" r="3.4" fill="#2e86ab"/>
-<circle cx="425.5" cy="217.2" r="3.4" fill="#2e86ab"/>
-<circle cx="487.0" cy="199.3" r="3.4" fill="#2e86ab"/>
-<circle cx="568.4" cy="145.5" r="3.4" fill="#2e86ab"/>
-<circle cx="630.0" cy="56.0" r="3.4" fill="#2e86ab"/>
-<line x1="646" y1="62" x2="668" y2="62" stroke="#d1495b" stroke-width="3"/>
-<text x="674" y="66" font-size="11.5" fill="#222222">default doc-sync (O(base+new))</text>
-<line x1="646" y1="84" x2="668" y2="84" stroke="#2e86ab" stroke-width="3"/>
-<text x="674" y="88" font-size="11.5" fill="#222222">reconcile (O(new·log n))</text>
-<text x="78.0" y="247.9" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
-<text x="630.0" y="50.3" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">42KB</text>
-<text x="78.0" y="397.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5KB</text>
-<text x="630.0" y="47.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">42KB</text>
+<line x1="78" y1="416.0" x2="630" y2="416.0" stroke="#e6e6e6"/>
+<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">5KB</text>
+<line x1="78" y1="348.4" x2="630" y2="348.4" stroke="#e6e6e6"/>
+<text x="70" y="352.4" font-size="11" fill="#444444" text-anchor="end">13KB</text>
+<line x1="78" y1="280.8" x2="630" y2="280.8" stroke="#e6e6e6"/>
+<text x="70" y="284.8" font-size="11" fill="#444444" text-anchor="end">20KB</text>
+<line x1="78" y1="213.2" x2="630" y2="213.2" stroke="#e6e6e6"/>
+<text x="70" y="217.2" font-size="11" fill="#444444" text-anchor="end">28KB</text>
+<line x1="78" y1="145.6" x2="630" y2="145.6" stroke="#e6e6e6"/>
+<text x="70" y="149.6" font-size="11" fill="#444444" text-anchor="end">35KB</text>
+<line x1="78" y1="78.0" x2="630" y2="78.0" stroke="#e6e6e6"/>
+<text x="70" y="82.0" font-size="11" fill="#444444" text-anchor="end">42KB</text>
+<line x1="78.0" y1="78" x2="78.0" y2="416" stroke="#e6e6e6"/>
+<text x="78.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">1</text>
+<line x1="282.5" y1="78" x2="282.5" y2="416" stroke="#e6e6e6"/>
+<text x="282.5" y="434.0" font-size="11" fill="#444444" text-anchor="middle">10</text>
+<line x1="487.0" y1="78" x2="487.0" y2="416" stroke="#e6e6e6"/>
+<text x="487.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">100</text>
+<line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>
+<line x1="78" y1="416" x2="630" y2="416" stroke="#444444"/>
+<text x="354" y="462" font-size="12" fill="#222222" text-anchor="middle">new documents added  (difference size, log scale)</text>
+<text x="20" y="247" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 247)">control bytes</text>
+<polyline points="78.0,272.0 282.5,268.5 425.5,253.2 487.0,234.1 568.4,176.8 630.0,81.2" fill="none" stroke="#d1495b" stroke-width="2.5" stroke-dasharray="6 4"/>
+<circle cx="78.0" cy="272.0" r="3.4" fill="#d1495b"/>
+<circle cx="282.5" cy="268.5" r="3.4" fill="#d1495b"/>
+<circle cx="425.5" cy="253.2" r="3.4" fill="#d1495b"/>
+<circle cx="487.0" cy="234.1" r="3.4" fill="#d1495b"/>
+<circle cx="568.4" cy="176.8" r="3.4" fill="#d1495b"/>
+<circle cx="630.0" cy="81.2" r="3.4" fill="#d1495b"/>
+<polyline points="78.0,416.0 282.5,325.9 425.5,233.6 487.0,216.3 568.4,164.5 630.0,78.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="78.0" cy="416.0" r="3.4" fill="#2e86ab"/>
+<circle cx="282.5" cy="325.9" r="3.4" fill="#2e86ab"/>
+<circle cx="425.5" cy="233.6" r="3.4" fill="#2e86ab"/>
+<circle cx="487.0" cy="216.3" r="3.4" fill="#2e86ab"/>
+<circle cx="568.4" cy="164.5" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="78.0" r="3.4" fill="#2e86ab"/>
+<line x1="646" y1="84" x2="668" y2="84" stroke="#d1495b" stroke-width="3"/>
+<text x="674" y="88" font-size="11.5" fill="#222222">default doc-sync (O(base+new))</text>
+<line x1="646" y1="106" x2="668" y2="106" stroke="#2e86ab" stroke-width="3"/>
+<text x="674" y="110" font-size="11.5" fill="#222222">reconcile (O(new·log n))</text>
+<text x="78.0" y="263.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
+<text x="630.0" y="72.2" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">42KB</text>
+<text x="78.0" y="407.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5KB</text>
+<text x="630.0" y="69.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">42KB</text>
 </svg>

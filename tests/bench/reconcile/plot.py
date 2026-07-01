@@ -34,8 +34,10 @@ GRID = "#e6e6e6"
 AXIS = "#444444"
 TEXT = "#222222"
 
-W, H = 880, 470
-PAD_L, PAD_R, PAD_T, PAD_B = 78, 250, 56, 64
+W, H = 880, 480
+# PAD_T leaves headroom below the title/subtitle so top-of-plot value labels
+# (drawn a few px above the highest point/bar) don't collide with the subtitle text.
+PAD_L, PAD_R, PAD_T, PAD_B = 78, 250, 78, 64
 
 
 def load():
@@ -661,8 +663,8 @@ def main():
 <style>
  body{{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;color:#222;line-height:1.5}}
  h1{{font-size:24px}} h2{{font-size:18px;margin-top:44px;border-bottom:2px solid {ACCENT};padding-bottom:5px}}
- figure{{margin:22px 0;text-align:center}} img{{max-width:100%;border:1px solid #eee;border-radius:8px}}
- figcaption{{font-size:13px;color:#555;margin:6px auto 0;max-width:820px;text-align:left}}
+ figure{{margin:34px 0;text-align:center}} img{{max-width:100%;border:1px solid #eee;border-radius:8px}}
+ figcaption{{font-size:13px;color:#555;margin:14px auto 0;max-width:820px;text-align:left;line-height:1.45}}
  code{{background:#f4f4f4;padding:1px 5px;border-radius:4px}}
  .take{{background:#f6f9f7;border-left:4px solid {ACCENT};padding:12px 16px;border-radius:6px}}
  .key{{background:#f7f8fa;border:1px solid #e6e6e6;border-radius:6px;padding:10px 16px;font-size:14px}}

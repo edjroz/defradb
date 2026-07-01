@@ -1,30 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
-<rect width="880" height="470" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="480" viewBox="0 0 880 480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="480" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Measured control bytes — 10-doc post-partition (M1, real nodes)</text>
 <text x="78" y="44" font-size="12" fill="#666">Same payload transferred either way; reconciliation's overhead dominates at per-document scale. Log scale.</text>
-<line x1="78" y1="406.0" x2="660" y2="406.0" stroke="#e6e6e6"/>
-<text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">1B</text>
-<line x1="78" y1="324.2" x2="660" y2="324.2" stroke="#e6e6e6"/>
-<text x="70" y="328.2" font-size="11" fill="#444444" text-anchor="end">10B</text>
-<line x1="78" y1="242.4" x2="660" y2="242.4" stroke="#e6e6e6"/>
-<text x="70" y="246.4" font-size="11" fill="#444444" text-anchor="end">100B</text>
-<line x1="78" y1="160.6" x2="660" y2="160.6" stroke="#e6e6e6"/>
-<text x="70" y="164.6" font-size="11" fill="#444444" text-anchor="end">1KB</text>
-<line x1="78" y1="78.7" x2="660" y2="78.7" stroke="#e6e6e6"/>
-<text x="70" y="82.7" font-size="11" fill="#444444" text-anchor="end">10KB</text>
-<line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
-<line x1="78" y1="406" x2="660" y2="406" stroke="#444444"/>
-<text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">control bytes (log scale)</text>
-<rect x="121.7" y="190.6" width="106.7" height="215.4" fill="#d1495b"/>
-<text x="175.0" y="183.6" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">429B</text>
-<text x="175.0" y="424.0" font-size="11" fill="#222222" text-anchor="middle">default doc-sync</text>
-<text x="175.0" y="438.0" font-size="11" fill="#222222" text-anchor="middle">(1 broadcast)</text>
-<rect x="315.6" y="56.0" width="106.7" height="350.0" fill="#2e86ab"/>
-<text x="369.0" y="49.0" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">19KB</text>
-<text x="369.0" y="424.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
-<text x="369.0" y="438.0" font-size="11" fill="#222222" text-anchor="middle">(10 sessions)</text>
-<rect x="509.6" y="123.1" width="106.7" height="282.9" fill="#2e86ab"/>
-<text x="563.0" y="116.1" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">3KB</text>
-<text x="563.0" y="424.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
-<text x="563.0" y="438.0" font-size="11" fill="#222222" text-anchor="middle">1 doc</text>
+<line x1="78" y1="416.0" x2="660" y2="416.0" stroke="#e6e6e6"/>
+<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">1B</text>
+<line x1="78" y1="337.0" x2="660" y2="337.0" stroke="#e6e6e6"/>
+<text x="70" y="341.0" font-size="11" fill="#444444" text-anchor="end">10B</text>
+<line x1="78" y1="258.0" x2="660" y2="258.0" stroke="#e6e6e6"/>
+<text x="70" y="262.0" font-size="11" fill="#444444" text-anchor="end">100B</text>
+<line x1="78" y1="179.0" x2="660" y2="179.0" stroke="#e6e6e6"/>
+<text x="70" y="183.0" font-size="11" fill="#444444" text-anchor="end">1KB</text>
+<line x1="78" y1="100.0" x2="660" y2="100.0" stroke="#e6e6e6"/>
+<text x="70" y="104.0" font-size="11" fill="#444444" text-anchor="end">10KB</text>
+<line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>
+<line x1="78" y1="416" x2="660" y2="416" stroke="#444444"/>
+<text x="20" y="247" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 247)">control bytes (log scale)</text>
+<rect x="121.7" y="208.0" width="106.7" height="208.0" fill="#d1495b"/>
+<text x="175.0" y="201.0" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">429B</text>
+<text x="175.0" y="434.0" font-size="11" fill="#222222" text-anchor="middle">default doc-sync</text>
+<text x="175.0" y="448.0" font-size="11" fill="#222222" text-anchor="middle">(1 broadcast)</text>
+<rect x="315.6" y="78.0" width="106.7" height="338.0" fill="#2e86ab"/>
+<text x="369.0" y="71.0" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">19KB</text>
+<text x="369.0" y="434.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
+<text x="369.0" y="448.0" font-size="11" fill="#222222" text-anchor="middle">(10 sessions)</text>
+<rect x="509.6" y="142.8" width="106.7" height="273.2" fill="#2e86ab"/>
+<text x="563.0" y="135.8" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">3KB</text>
+<text x="563.0" y="434.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
+<text x="563.0" y="448.0" font-size="11" fill="#222222" text-anchor="middle">1 doc</text>
 </svg>
