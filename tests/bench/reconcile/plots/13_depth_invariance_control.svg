@@ -9,7 +9,7 @@
 <line x1="78" y1="258.0" x2="660" y2="258.0" stroke="#e6e6e6"/>
 <text x="70" y="262.0" font-size="11" fill="#444444" text-anchor="end">100B</text>
 <line x1="78" y1="179.0" x2="660" y2="179.0" stroke="#e6e6e6"/>
-<text x="70" y="183.0" font-size="11" fill="#444444" text-anchor="end">1KB</text>
+<text x="70" y="183.0" font-size="11" fill="#444444" text-anchor="end">1.0KB</text>
 <line x1="78" y1="100.0" x2="660" y2="100.0" stroke="#e6e6e6"/>
 <text x="70" y="104.0" font-size="11" fill="#444444" text-anchor="end">10KB</text>
 <line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>

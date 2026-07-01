@@ -52,8 +52,12 @@ def esc(s):
 def fmt_bytes(v):
     if v >= 1_000_000:
         return f"{v/1_000_000:.1f}MB"
-    if v >= 1000:
+    # One decimal below 10KB so nearby values (e.g. 1.5KB vs 2.2KB) don't both
+    # round to the same whole-KB label; whole KB above that to avoid noise.
+    if v >= 10_000:
         return f"{v/1000:.0f}KB"
+    if v >= 1000:
+        return f"{v/1000:.1f}KB"
     return f"{int(v)}B"
 
 

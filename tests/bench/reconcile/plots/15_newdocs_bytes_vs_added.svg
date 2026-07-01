@@ -3,7 +3,7 @@
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes vs difference size — brand-NEW docs (500 base, real nodes)</text>
 <text x="78" y="44" font-size="12" fill="#666">Measured mirror of chart 3: the diff is new documents, so the default's docID list grows too. Both rise — default O(base+new), reconcile O(new·log n).</text>
 <line x1="78" y1="416.0" x2="630" y2="416.0" stroke="#e6e6e6"/>
-<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">5KB</text>
+<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">5.2KB</text>
 <line x1="78" y1="348.4" x2="630" y2="348.4" stroke="#e6e6e6"/>
 <text x="70" y="352.4" font-size="11" fill="#444444" text-anchor="end">13KB</text>
 <line x1="78" y1="280.8" x2="630" y2="280.8" stroke="#e6e6e6"/>
@@ -44,6 +44,6 @@
 <text x="674" y="110" font-size="11.5" fill="#222222">reconcile (O(new·log n))</text>
 <text x="78.0" y="263.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
 <text x="630.0" y="72.2" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">42KB</text>
-<text x="78.0" y="407.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5KB</text>
+<text x="78.0" y="407.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5.2KB</text>
 <text x="630.0" y="69.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">42KB</text>
 </svg>
