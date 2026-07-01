@@ -34,10 +34,10 @@ GRID = "#e6e6e6"
 AXIS = "#444444"
 TEXT = "#222222"
 
-W, H = 880, 480
-# PAD_T leaves headroom below the title/subtitle so top-of-plot value labels
-# (drawn a few px above the highest point/bar) don't collide with the subtitle text.
-PAD_L, PAD_R, PAD_T, PAD_B = 78, 250, 78, 64
+W, H = 880, 500
+# PAD_T leaves headroom for a (possibly two-line, wrapped) subtitle plus a gap so
+# top-of-plot value labels don't collide with the subtitle text.
+PAD_L, PAD_R, PAD_T, PAD_B = 78, 250, 86, 64
 
 
 def load():
@@ -47,6 +47,27 @@ def load():
 
 def esc(s):
     return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def wrap(text, max_chars):
+    """Greedy word-wrap into lines of at most ~max_chars characters, so long chart
+    subtitles render across several lines instead of running off the right edge."""
+    words, lines, cur = text.split(), [], ""
+    for w in words:
+        if cur and len(cur) + 1 + len(w) > max_chars:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = f"{cur} {w}" if cur else w
+    if cur:
+        lines.append(cur)
+    return lines
+
+
+def subtitle_svg(subtitle, x, y0=44, dy=15, max_chars=108):
+    """SVG <text> elements for a wrapped subtitle."""
+    return [f'<text x="{x}" y="{y0 + i * dy}" font-size="12" fill="#666">{esc(line)}</text>'
+            for i, line in enumerate(wrap(subtitle, max_chars))]
 
 
 def fmt_bytes(v):
@@ -116,8 +137,8 @@ def line_chart(filename, title, subtitle, xlabel, ylabel, series,
         f'viewBox="0 0 {W} {H}" font-family="-apple-system,Segoe UI,Roboto,sans-serif">',
         f'<rect width="{W}" height="{H}" fill="white"/>',
         f'<text x="{PAD_L}" y="26" font-size="17" font-weight="700" fill="{TEXT}">{esc(title)}</text>',
-        f'<text x="{PAD_L}" y="44" font-size="12" fill="#666">{esc(subtitle)}</text>',
     ]
+    svg += subtitle_svg(subtitle, PAD_L)
 
     # gridlines + tick labels
     for tv in ya.ticks():
@@ -183,8 +204,8 @@ def bar_chart(filename, title, subtitle, ylabel, bars, ylog, yfmt):
         f'viewBox="0 0 {W} {H}" font-family="-apple-system,Segoe UI,Roboto,sans-serif">',
         f'<rect width="{W}" height="{H}" fill="white"/>',
         f'<text x="{PAD_L}" y="26" font-size="17" font-weight="700" fill="{TEXT}">{esc(title)}</text>',
-        f'<text x="{PAD_L}" y="44" font-size="12" fill="#666">{esc(subtitle)}</text>',
     ]
+    svg += subtitle_svg(subtitle, PAD_L)
     for tv in ya.ticks():
         py = ya.px(tv)
         svg.append(f'<line x1="{PAD_L}" y1="{py:.1f}" x2="{W-220}" y2="{py:.1f}" stroke="{GRID}"/>')
@@ -600,23 +621,23 @@ def main():
          ]),
         ("C · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)",
          "The core value, measured, across both variables of the complexity: grow the "
-         "collection (chart 9) or grow the difference (charts 12 &amp; 15). Note what "
-         "counts as a \"difference\": <b>updates to existing docs</b> keep the docID set "
-         "fixed, so default stays flat (chart 12); <b>brand-new docs</b> enlarge it, so "
-         "default grows too (chart 15, the measured mirror of chart 3). Y is coordination "
-         "cost; payload is identical either way.",
+         "collection (chart 9) or grow the difference (charts 15 &amp; 12). Note what "
+         "counts as a \"difference\": <b>brand-new docs</b> enlarge the docID set, so "
+         "default grows too (chart 15, the measured mirror of chart 3); <b>updates to "
+         "existing docs</b> keep it fixed, so default stays flat (chart 12). Y is "
+         "coordination cost; payload is identical either way.",
          [
              ("09_tinydiff_bytes_vs_docs.svg",
               "<b>x</b> = collection size 50→1000 (one doc changed); <b>y</b> = control bytes. "
               "Default is O(n) (2.1→42KB); reconciliation ~logarithmic (2.7→6.4KB) — 6.5× fewer at 1000 docs."),
-             ("12_diffsweep_bytes_vs_diff.svg",
-              "<b>x</b> = <em>updated</em> docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. "
-              "Difference = new versions of existing docs, so the docID set stays 500 → default flat at 21KB; "
-              "reconciliation linear (5.3→23.2KB), crossing only at ~79% changed."),
              ("15_newdocs_bytes_vs_added.svg",
               "<b>x</b> = <em>brand-new</em> docs added 1→500 (500 base); <b>y</b> = control bytes. "
               "Difference = new docIDs, so BOTH grow — default O(base+new), reconcile O(new·log n). "
               "The measured analogue of the modelled chart 3."),
+             ("12_diffsweep_bytes_vs_diff.svg",
+              "<b>x</b> = <em>updated</em> docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. "
+              "Difference = new versions of existing docs, so the docID set stays 500 → default flat at 21KB; "
+              "reconciliation linear (5.3→23.2KB), crossing only at ~79% changed."),
          ]),
         ("D · Maintenance cost (real node)",
          "What it costs when the flag is on: a small, always-on bookkeeping write on every "

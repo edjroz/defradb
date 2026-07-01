@@ -1,40 +1,41 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="480" viewBox="0 0 880 480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
-<rect width="880" height="480" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="500" viewBox="0 0 880 500" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="500" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Payload scales with branch depth (same 10-doc fork, real nodes)</text>
-<text x="78" y="44" font-size="12" fill="#666">The blocks reconciliation fetches + merges grow with depth — the cost it does NOT avoid (contrast the flat control bytes in chart 13).</text>
-<line x1="78" y1="416.0" x2="630" y2="416.0" stroke="#e6e6e6"/>
-<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">60</text>
-<line x1="78" y1="348.4" x2="630" y2="348.4" stroke="#e6e6e6"/>
-<text x="70" y="352.4" font-size="11" fill="#444444" text-anchor="end">248</text>
-<line x1="78" y1="280.8" x2="630" y2="280.8" stroke="#e6e6e6"/>
-<text x="70" y="284.8" font-size="11" fill="#444444" text-anchor="end">436</text>
-<line x1="78" y1="213.2" x2="630" y2="213.2" stroke="#e6e6e6"/>
-<text x="70" y="217.2" font-size="11" fill="#444444" text-anchor="end">624</text>
-<line x1="78" y1="145.6" x2="630" y2="145.6" stroke="#e6e6e6"/>
-<text x="70" y="149.6" font-size="11" fill="#444444" text-anchor="end">812</text>
-<line x1="78" y1="78.0" x2="630" y2="78.0" stroke="#e6e6e6"/>
-<text x="70" y="82.0" font-size="11" fill="#444444" text-anchor="end">1k</text>
-<line x1="78.0" y1="78" x2="78.0" y2="416" stroke="#e6e6e6"/>
-<text x="78.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">3</text>
-<line x1="188.4" y1="78" x2="188.4" y2="416" stroke="#e6e6e6"/>
-<text x="188.4" y="434.0" font-size="11" fill="#444444" text-anchor="middle">12</text>
-<line x1="298.8" y1="78" x2="298.8" y2="416" stroke="#e6e6e6"/>
-<text x="298.8" y="434.0" font-size="11" fill="#444444" text-anchor="middle">22</text>
-<line x1="409.2" y1="78" x2="409.2" y2="416" stroke="#e6e6e6"/>
-<text x="409.2" y="434.0" font-size="11" fill="#444444" text-anchor="middle">31</text>
-<line x1="519.6" y1="78" x2="519.6" y2="416" stroke="#e6e6e6"/>
-<text x="519.6" y="434.0" font-size="11" fill="#444444" text-anchor="middle">41</text>
-<line x1="630.0" y1="78" x2="630.0" y2="416" stroke="#e6e6e6"/>
-<text x="630.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">50</text>
-<line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>
-<line x1="78" y1="416" x2="630" y2="416" stroke="#444444"/>
-<text x="354" y="462" font-size="12" fill="#222222" text-anchor="middle">branch depth  (commits per branch)</text>
-<text x="20" y="247" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 247)">blocks transferred</text>
-<polyline points="78.0,416.0 630.0,78.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
-<circle cx="78.0" cy="416.0" r="3.4" fill="#2e86ab"/>
-<circle cx="630.0" cy="78.0" r="3.4" fill="#2e86ab"/>
-<line x1="646" y1="84" x2="668" y2="84" stroke="#2e86ab" stroke-width="3"/>
-<text x="674" y="88" font-size="11.5" fill="#222222">reconcile (blocks fetched)</text>
-<text x="78.0" y="407.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">60</text>
-<text x="630.0" y="69.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">1k</text>
+<text x="78" y="44" font-size="12" fill="#666">The blocks reconciliation fetches + merges grow with depth — the cost it does NOT avoid (contrast the flat</text>
+<text x="78" y="59" font-size="12" fill="#666">control bytes in chart 13).</text>
+<line x1="78" y1="436.0" x2="630" y2="436.0" stroke="#e6e6e6"/>
+<text x="70" y="440.0" font-size="11" fill="#444444" text-anchor="end">60</text>
+<line x1="78" y1="366.0" x2="630" y2="366.0" stroke="#e6e6e6"/>
+<text x="70" y="370.0" font-size="11" fill="#444444" text-anchor="end">248</text>
+<line x1="78" y1="296.0" x2="630" y2="296.0" stroke="#e6e6e6"/>
+<text x="70" y="300.0" font-size="11" fill="#444444" text-anchor="end">436</text>
+<line x1="78" y1="226.0" x2="630" y2="226.0" stroke="#e6e6e6"/>
+<text x="70" y="230.0" font-size="11" fill="#444444" text-anchor="end">624</text>
+<line x1="78" y1="156.0" x2="630" y2="156.0" stroke="#e6e6e6"/>
+<text x="70" y="160.0" font-size="11" fill="#444444" text-anchor="end">812</text>
+<line x1="78" y1="86.0" x2="630" y2="86.0" stroke="#e6e6e6"/>
+<text x="70" y="90.0" font-size="11" fill="#444444" text-anchor="end">1k</text>
+<line x1="78.0" y1="86" x2="78.0" y2="436" stroke="#e6e6e6"/>
+<text x="78.0" y="454.0" font-size="11" fill="#444444" text-anchor="middle">3</text>
+<line x1="188.4" y1="86" x2="188.4" y2="436" stroke="#e6e6e6"/>
+<text x="188.4" y="454.0" font-size="11" fill="#444444" text-anchor="middle">12</text>
+<line x1="298.8" y1="86" x2="298.8" y2="436" stroke="#e6e6e6"/>
+<text x="298.8" y="454.0" font-size="11" fill="#444444" text-anchor="middle">22</text>
+<line x1="409.2" y1="86" x2="409.2" y2="436" stroke="#e6e6e6"/>
+<text x="409.2" y="454.0" font-size="11" fill="#444444" text-anchor="middle">31</text>
+<line x1="519.6" y1="86" x2="519.6" y2="436" stroke="#e6e6e6"/>
+<text x="519.6" y="454.0" font-size="11" fill="#444444" text-anchor="middle">41</text>
+<line x1="630.0" y1="86" x2="630.0" y2="436" stroke="#e6e6e6"/>
+<text x="630.0" y="454.0" font-size="11" fill="#444444" text-anchor="middle">50</text>
+<line x1="78" y1="86" x2="78" y2="436" stroke="#444444"/>
+<line x1="78" y1="436" x2="630" y2="436" stroke="#444444"/>
+<text x="354" y="482" font-size="12" fill="#222222" text-anchor="middle">branch depth  (commits per branch)</text>
+<text x="20" y="261" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 261)">blocks transferred</text>
+<polyline points="78.0,436.0 630.0,86.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="78.0" cy="436.0" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="86.0" r="3.4" fill="#2e86ab"/>
+<line x1="646" y1="92" x2="668" y2="92" stroke="#2e86ab" stroke-width="3"/>
+<text x="674" y="96" font-size="11.5" fill="#222222">reconcile (blocks fetched)</text>
+<text x="78.0" y="427.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">60</text>
+<text x="630.0" y="77.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">1k</text>
 </svg>

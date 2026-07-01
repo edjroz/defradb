@@ -1,24 +1,24 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="480" viewBox="0 0 880 480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
-<rect width="880" height="480" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="500" viewBox="0 0 880 500" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="500" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes to converge 10 docs (real nodes)</text>
 <text x="78" y="44" font-size="12" fill="#666">Collection-scope reconciliation lands near a single broadcast; same payload. Log scale.</text>
-<line x1="78" y1="416.0" x2="660" y2="416.0" stroke="#e6e6e6"/>
-<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">1B</text>
-<line x1="78" y1="314.7" x2="660" y2="314.7" stroke="#e6e6e6"/>
-<text x="70" y="318.7" font-size="11" fill="#444444" text-anchor="end">10B</text>
-<line x1="78" y1="213.4" x2="660" y2="213.4" stroke="#e6e6e6"/>
-<text x="70" y="217.4" font-size="11" fill="#444444" text-anchor="end">100B</text>
-<line x1="78" y1="112.1" x2="660" y2="112.1" stroke="#e6e6e6"/>
-<text x="70" y="116.1" font-size="11" fill="#444444" text-anchor="end">1.0KB</text>
-<line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>
-<line x1="78" y1="416" x2="660" y2="416" stroke="#444444"/>
-<text x="20" y="247" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 247)">control bytes (log scale)</text>
-<rect x="143.5" y="94.0" width="160.1" height="322.0" fill="#d1495b"/>
-<text x="223.5" y="87.0" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">1.5KB</text>
-<text x="223.5" y="434.0" font-size="11" fill="#222222" text-anchor="middle">default</text>
-<text x="223.5" y="448.0" font-size="11" fill="#222222" text-anchor="middle">doc-sync</text>
-<rect x="434.5" y="78.0" width="160.1" height="338.0" fill="#2e86ab"/>
-<text x="514.5" y="71.0" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">2.2KB</text>
-<text x="514.5" y="434.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
-<text x="514.5" y="448.0" font-size="11" fill="#222222" text-anchor="middle">(collection)</text>
+<line x1="78" y1="436.0" x2="660" y2="436.0" stroke="#e6e6e6"/>
+<text x="70" y="440.0" font-size="11" fill="#444444" text-anchor="end">1B</text>
+<line x1="78" y1="331.1" x2="660" y2="331.1" stroke="#e6e6e6"/>
+<text x="70" y="335.1" font-size="11" fill="#444444" text-anchor="end">10B</text>
+<line x1="78" y1="226.2" x2="660" y2="226.2" stroke="#e6e6e6"/>
+<text x="70" y="230.2" font-size="11" fill="#444444" text-anchor="end">100B</text>
+<line x1="78" y1="121.3" x2="660" y2="121.3" stroke="#e6e6e6"/>
+<text x="70" y="125.3" font-size="11" fill="#444444" text-anchor="end">1.0KB</text>
+<line x1="78" y1="86" x2="78" y2="436" stroke="#444444"/>
+<line x1="78" y1="436" x2="660" y2="436" stroke="#444444"/>
+<text x="20" y="261" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 261)">control bytes (log scale)</text>
+<rect x="143.5" y="102.6" width="160.1" height="333.4" fill="#d1495b"/>
+<text x="223.5" y="95.6" font-size="12" font-weight="600" fill="#d1495b" text-anchor="middle">1.5KB</text>
+<text x="223.5" y="454.0" font-size="11" fill="#222222" text-anchor="middle">default</text>
+<text x="223.5" y="468.0" font-size="11" fill="#222222" text-anchor="middle">doc-sync</text>
+<rect x="434.5" y="86.0" width="160.1" height="350.0" fill="#2e86ab"/>
+<text x="514.5" y="79.0" font-size="12" font-weight="600" fill="#2e86ab" text-anchor="middle">2.2KB</text>
+<text x="514.5" y="454.0" font-size="11" fill="#222222" text-anchor="middle">reconcile</text>
+<text x="514.5" y="468.0" font-size="11" fill="#222222" text-anchor="middle">(collection)</text>
 </svg>

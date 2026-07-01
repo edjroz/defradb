@@ -1,59 +1,60 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="880" height="480" viewBox="0 0 880 480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
-<rect width="880" height="480" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="500" viewBox="0 0 880 500" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="880" height="500" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes to sync ONE changed doc vs collection size (real nodes)</text>
-<text x="78" y="44" font-size="12" fill="#666">Default must enumerate every docID (control grows with the collection); reconciliation tracks the single-block diff and stays ~flat.</text>
-<line x1="78" y1="416.0" x2="630" y2="416.0" stroke="#e6e6e6"/>
-<text x="70" y="420.0" font-size="11" fill="#444444" text-anchor="end">2.1KB</text>
-<line x1="78" y1="348.4" x2="630" y2="348.4" stroke="#e6e6e6"/>
-<text x="70" y="352.4" font-size="11" fill="#444444" text-anchor="end">10KB</text>
-<line x1="78" y1="280.8" x2="630" y2="280.8" stroke="#e6e6e6"/>
-<text x="70" y="284.8" font-size="11" fill="#444444" text-anchor="end">18KB</text>
-<line x1="78" y1="213.2" x2="630" y2="213.2" stroke="#e6e6e6"/>
-<text x="70" y="217.2" font-size="11" fill="#444444" text-anchor="end">26KB</text>
-<line x1="78" y1="145.6" x2="630" y2="145.6" stroke="#e6e6e6"/>
-<text x="70" y="149.6" font-size="11" fill="#444444" text-anchor="end">34KB</text>
-<line x1="78" y1="78.0" x2="630" y2="78.0" stroke="#e6e6e6"/>
-<text x="70" y="82.0" font-size="11" fill="#444444" text-anchor="end">42KB</text>
-<line x1="78.0" y1="78" x2="78.0" y2="416" stroke="#e6e6e6"/>
-<text x="78.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">50</text>
-<line x1="188.4" y1="78" x2="188.4" y2="416" stroke="#e6e6e6"/>
-<text x="188.4" y="434.0" font-size="11" fill="#444444" text-anchor="middle">240</text>
-<line x1="298.8" y1="78" x2="298.8" y2="416" stroke="#e6e6e6"/>
-<text x="298.8" y="434.0" font-size="11" fill="#444444" text-anchor="middle">430</text>
-<line x1="409.2" y1="78" x2="409.2" y2="416" stroke="#e6e6e6"/>
-<text x="409.2" y="434.0" font-size="11" fill="#444444" text-anchor="middle">620</text>
-<line x1="519.6" y1="78" x2="519.6" y2="416" stroke="#e6e6e6"/>
-<text x="519.6" y="434.0" font-size="11" fill="#444444" text-anchor="middle">810</text>
-<line x1="630.0" y1="78" x2="630.0" y2="416" stroke="#e6e6e6"/>
-<text x="630.0" y="434.0" font-size="11" fill="#444444" text-anchor="middle">1000</text>
-<line x1="78" y1="78" x2="78" y2="416" stroke="#444444"/>
-<line x1="78" y1="416" x2="630" y2="416" stroke="#444444"/>
-<text x="354" y="462" font-size="12" fill="#222222" text-anchor="middle">collection size  (documents)</text>
-<text x="20" y="247" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 247)">control bytes</text>
-<polyline points="78.0,416.0 107.1,398.2 165.2,362.6 339.5,255.9 630.0,78.0" fill="none" stroke="#d1495b" stroke-width="2.5"/>
-<circle cx="78.0" cy="416.0" r="3.4" fill="#d1495b"/>
-<circle cx="107.1" cy="398.2" r="3.4" fill="#d1495b"/>
-<circle cx="165.2" cy="362.6" r="3.4" fill="#d1495b"/>
-<circle cx="339.5" cy="255.9" r="3.4" fill="#d1495b"/>
-<circle cx="630.0" cy="78.0" r="3.4" fill="#d1495b"/>
-<polyline points="78.0,411.4 107.1,397.3 165.2,395.4 339.5,389.3 630.0,379.3" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
-<circle cx="78.0" cy="411.4" r="3.4" fill="#2e86ab"/>
-<circle cx="107.1" cy="397.3" r="3.4" fill="#2e86ab"/>
-<circle cx="165.2" cy="395.4" r="3.4" fill="#2e86ab"/>
-<circle cx="339.5" cy="389.3" r="3.4" fill="#2e86ab"/>
-<circle cx="630.0" cy="379.3" r="3.4" fill="#2e86ab"/>
-<line x1="646" y1="84" x2="668" y2="84" stroke="#d1495b" stroke-width="3"/>
-<text x="674" y="88" font-size="11.5" fill="#222222">default doc-sync</text>
-<line x1="646" y1="106" x2="668" y2="106" stroke="#2e86ab" stroke-width="3"/>
-<text x="674" y="110" font-size="11.5" fill="#222222">reconcile (M2)</text>
-<text x="78.0" y="407.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">2.1KB</text>
-<text x="107.1" y="389.2" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">4.2KB</text>
-<text x="165.2" y="353.6" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">8.4KB</text>
-<text x="339.5" y="246.9" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
-<text x="630.0" y="69.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">42KB</text>
-<text x="78.0" y="402.4" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">2.7KB</text>
-<text x="107.1" y="388.3" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">4.3KB</text>
-<text x="165.2" y="386.4" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">4.5KB</text>
-<text x="339.5" y="380.3" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5.3KB</text>
-<text x="630.0" y="370.3" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">6.4KB</text>
+<text x="78" y="44" font-size="12" fill="#666">Default must enumerate every docID (control grows with the collection); reconciliation tracks the</text>
+<text x="78" y="59" font-size="12" fill="#666">single-block diff and stays ~flat.</text>
+<line x1="78" y1="436.0" x2="630" y2="436.0" stroke="#e6e6e6"/>
+<text x="70" y="440.0" font-size="11" fill="#444444" text-anchor="end">2.1KB</text>
+<line x1="78" y1="366.0" x2="630" y2="366.0" stroke="#e6e6e6"/>
+<text x="70" y="370.0" font-size="11" fill="#444444" text-anchor="end">10KB</text>
+<line x1="78" y1="296.0" x2="630" y2="296.0" stroke="#e6e6e6"/>
+<text x="70" y="300.0" font-size="11" fill="#444444" text-anchor="end">18KB</text>
+<line x1="78" y1="226.0" x2="630" y2="226.0" stroke="#e6e6e6"/>
+<text x="70" y="230.0" font-size="11" fill="#444444" text-anchor="end">26KB</text>
+<line x1="78" y1="156.0" x2="630" y2="156.0" stroke="#e6e6e6"/>
+<text x="70" y="160.0" font-size="11" fill="#444444" text-anchor="end">34KB</text>
+<line x1="78" y1="86.0" x2="630" y2="86.0" stroke="#e6e6e6"/>
+<text x="70" y="90.0" font-size="11" fill="#444444" text-anchor="end">42KB</text>
+<line x1="78.0" y1="86" x2="78.0" y2="436" stroke="#e6e6e6"/>
+<text x="78.0" y="454.0" font-size="11" fill="#444444" text-anchor="middle">50</text>
+<line x1="188.4" y1="86" x2="188.4" y2="436" stroke="#e6e6e6"/>
+<text x="188.4" y="454.0" font-size="11" fill="#444444" text-anchor="middle">240</text>
+<line x1="298.8" y1="86" x2="298.8" y2="436" stroke="#e6e6e6"/>
+<text x="298.8" y="454.0" font-size="11" fill="#444444" text-anchor="middle">430</text>
+<line x1="409.2" y1="86" x2="409.2" y2="436" stroke="#e6e6e6"/>
+<text x="409.2" y="454.0" font-size="11" fill="#444444" text-anchor="middle">620</text>
+<line x1="519.6" y1="86" x2="519.6" y2="436" stroke="#e6e6e6"/>
+<text x="519.6" y="454.0" font-size="11" fill="#444444" text-anchor="middle">810</text>
+<line x1="630.0" y1="86" x2="630.0" y2="436" stroke="#e6e6e6"/>
+<text x="630.0" y="454.0" font-size="11" fill="#444444" text-anchor="middle">1000</text>
+<line x1="78" y1="86" x2="78" y2="436" stroke="#444444"/>
+<line x1="78" y1="436" x2="630" y2="436" stroke="#444444"/>
+<text x="354" y="482" font-size="12" fill="#222222" text-anchor="middle">collection size  (documents)</text>
+<text x="20" y="261" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 261)">control bytes</text>
+<polyline points="78.0,436.0 107.1,417.6 165.2,380.7 339.5,270.2 630.0,86.0" fill="none" stroke="#d1495b" stroke-width="2.5"/>
+<circle cx="78.0" cy="436.0" r="3.4" fill="#d1495b"/>
+<circle cx="107.1" cy="417.6" r="3.4" fill="#d1495b"/>
+<circle cx="165.2" cy="380.7" r="3.4" fill="#d1495b"/>
+<circle cx="339.5" cy="270.2" r="3.4" fill="#d1495b"/>
+<circle cx="630.0" cy="86.0" r="3.4" fill="#d1495b"/>
+<polyline points="78.0,431.3 107.1,416.6 165.2,414.6 339.5,408.3 630.0,398.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="78.0" cy="431.3" r="3.4" fill="#2e86ab"/>
+<circle cx="107.1" cy="416.6" r="3.4" fill="#2e86ab"/>
+<circle cx="165.2" cy="414.6" r="3.4" fill="#2e86ab"/>
+<circle cx="339.5" cy="408.3" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="398.0" r="3.4" fill="#2e86ab"/>
+<line x1="646" y1="92" x2="668" y2="92" stroke="#d1495b" stroke-width="3"/>
+<text x="674" y="96" font-size="11.5" fill="#222222">default doc-sync</text>
+<line x1="646" y1="114" x2="668" y2="114" stroke="#2e86ab" stroke-width="3"/>
+<text x="674" y="118" font-size="11.5" fill="#222222">reconcile (M2)</text>
+<text x="78.0" y="427.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">2.1KB</text>
+<text x="107.1" y="408.6" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">4.2KB</text>
+<text x="165.2" y="371.7" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">8.4KB</text>
+<text x="339.5" y="261.2" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
+<text x="630.0" y="77.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">42KB</text>
+<text x="78.0" y="422.3" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">2.7KB</text>
+<text x="107.1" y="407.6" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">4.3KB</text>
+<text x="165.2" y="405.6" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">4.5KB</text>
+<text x="339.5" y="399.3" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5.3KB</text>
+<text x="630.0" y="389.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">6.4KB</text>
 </svg>
