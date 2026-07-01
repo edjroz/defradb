@@ -526,59 +526,132 @@ def main():
             ],
             xlog=False, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_int))
 
-    # index.html
-    cards = "\n".join(
-        f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
+    # index.html — grouped, each group with a blurb and each chart with a 2-line caption.
+    groups = [
+        ("A · Modelled asymptotic sweep",
+         "Synthetic sweep of the real Phase-2 negentropy engine against an idealized "
+         "full-identifier baseline — the asymptotic shape at sizes too large to run "
+         "end-to-end. Directional, not wall-clock; the baseline is deliberately generous, "
+         "so these <em>understate</em> the real win.",
+         [
+             ("01_bytes_vs_n.svg",
+              "<b>x</b> = set size n (diff fixed at 2); <b>y</b> = control bytes, log-log. "
+              "Default climbs with the set, negentropy with its logarithm — 188× fewer at n=100k."),
+             ("02_reduction_vs_n.svg",
+              "<b>x</b> = set size n; <b>y</b> = default ÷ negentropy. Chart 1 as a ratio: "
+              "the saving compounds with set size — the larger the shared set, the bigger the win."),
+             ("03_bytes_vs_d.svg",
+              "<b>x</b> = difference size d (set fixed at 10k); <b>y</b> = control bytes, log-log. "
+              "Default is flat (ships the whole set); negentropy rises with the diff and crosses "
+              "~10% here — but this model is pessimistic, so read the measured chart 12."),
+             ("04_rounds_vs_n.svg",
+              "<b>x</b> = set size n; <b>y</b> = round-trips. Negentropy spends 2–4 logarithmic "
+              "rounds where default takes 1 — the latency price paid for the byte savings."),
+         ]),
+        ("B · Per-document scale (M1, real nodes)",
+         "Measured on two real nodes. The pessimistic case — reconciling one document at a "
+         "time, where per-session overhead has nothing to amortize against.",
+         [
+             ("05_measured_control_bytes.svg",
+              "Bars = coordination bytes to converge 10 divergent docs, log-y. Per-document "
+              "reconciliation (18.9KB) costs ~44× a single broadcast (429B) — honest overhead "
+              "when there is nothing to prune."),
+             ("06_measured_round_trips.svg",
+              "Bars = round-trips, same run. 42 per-document sessions vs default's 1 — why "
+              "per-document scope is not the shipping mode."),
+         ]),
+        ("C · Per-collection batching (M2, real nodes)",
+         "The same convergence, but one session for the whole collection. This is the mode "
+         "DefraDB actually ships — it removes M1's per-document penalty.",
+         [
+             ("07_m2_round_trips.svg",
+              "Bars = round-trips to converge 10 docs. One collection session (4) collapses "
+              "M1's 42 back toward default's 3."),
+             ("08_m2_control_bytes.svg",
+              "Bars = control bytes, log-y. Collection-scope reconciliation (2.2KB) lands near "
+              "broadcast (1.5KB), erasing M1's 44× penalty — same payload throughout."),
+         ]),
+        ("D · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)",
+         "The core value, measured, across both variables of the complexity: grow the "
+         "collection with the diff fixed (chart 9), or grow the diff with the collection "
+         "fixed (chart 12). Y is coordination cost; payload is identical either way.",
+         [
+             ("09_tinydiff_bytes_vs_docs.svg",
+              "<b>x</b> = collection size 50→1000 (one doc changed); <b>y</b> = control bytes. "
+              "Default is O(n) (2.1→42KB); reconciliation ~logarithmic (2.7→6.4KB) — 6.5× fewer at 1000 docs."),
+             ("12_diffsweep_bytes_vs_diff.svg",
+              "<b>x</b> = changed docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. "
+              "Default flat at O(n)=21KB (it lists every docID regardless); reconciliation linear "
+              "(5.3→23.2KB), crossing above only at ~79% changed."),
+         ]),
+        ("E · Maintenance cost (real node)",
+         "What it costs when the flag is on: a small, always-on bookkeeping write on every "
+         "local commit. Paid whether or not you ever reconcile.",
+         [
+             ("10_indexwrite_cost.svg",
+              "Bars = local write latency, flag off vs on. The ordered-index write adds ~4.6% "
+              "(76.4→80.0ms) — bounded, and only when enabled."),
+         ]),
+        ("F · Cross-container network (real Docker containers)",
+         "Off the single-process bench and onto real Docker containers on one host bridge, "
+         "scaling the network 2→10 nodes (star topology, one diverged doc in a 50-doc collection).",
+         [
+             ("11_crossdevice_validation.svg",
+              "<b>x</b> = node count 2→10; <b>y</b> = total network control bytes, log-y. "
+              "Default is super-linear (18KB→1.28MB); reconciliation linear (10→90KB) — the "
+              "reduction compounds 1.8×→14×. Every run converged with identical document state."),
+         ]),
+        ("G · Long-branch depth-invariance (real nodes)",
+         "The long-differing-branch case — does a deep divergence cost more to <em>discover</em>? "
+         "A two-sided fork with branches 3 vs 50 commits deep.",
+         [
+             ("13_depth_invariance_control.svg",
+              "<b>x</b> = branch depth (3 vs 50); <b>y</b> = control bytes, log-y. Flat across a "
+              "16× depth increase for both — a deep branch is still one differing head."),
+             ("14_depth_payload.svg",
+              "<b>x</b> = branch depth; <b>y</b> = blocks fetched. Payload scales with depth "
+              "(60→1000) — depth is a transfer/merge cost, not a discovery cost."),
+         ]),
+    ]
+
+    written_set = set(written)
+    sections = []
+    for gtitle, gdesc, charts in groups:
+        cards = [
+            f'<figure><img src="plots/{fn}" alt="{fn}"/><figcaption>{cap}</figcaption></figure>'
+            for fn, cap in charts if fn in written_set
+        ]
+        if cards:
+            sections.append(
+                f'<section><h2>{esc(gtitle)}</h2><p class="gdesc">{gdesc}</p>\n'
+                + "\n".join(cards) + "\n</section>")
+    body = "\n".join(sections)
+
     html = f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
-<title>Negentropy vs default sync — control-traffic comparison</title>
+<title>Range-based set reconciliation vs default sync — evidence</title>
 <style>
  body{{font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:40px auto;padding:0 16px;color:#222;line-height:1.5}}
- h1{{font-size:24px}} figure{{margin:24px 0;text-align:center}} img{{max-width:100%;border:1px solid #eee;border-radius:8px}}
+ h1{{font-size:24px}} h2{{font-size:18px;margin-top:44px;border-bottom:2px solid {ACCENT};padding-bottom:5px}}
+ figure{{margin:22px 0;text-align:center}} img{{max-width:100%;border:1px solid #eee;border-radius:8px}}
+ figcaption{{font-size:13px;color:#555;margin:6px auto 0;max-width:820px;text-align:left}}
  code{{background:#f4f4f4;padding:1px 5px;border-radius:4px}}
  .take{{background:#f6f9f7;border-left:4px solid {ACCENT};padding:12px 16px;border-radius:6px}}
+ .key{{background:#f7f8fa;border:1px solid #e6e6e6;border-radius:6px;padding:10px 16px;font-size:14px}}
+ .gdesc{{color:#444;font-size:14px}}
 </style></head><body>
 <h1>Range-based set reconciliation vs default sync</h1>
-<p class="take"><b>The case in one line:</b> to discover a tiny difference inside a large
-set, the default sync must communicate the whole set (O(n) control bytes), while
-negentropy narrows in on just the difference (O(d&middot;log&nbsp;n)) — a
-<b>188&times; control-traffic reduction at n=100k</b> for a 2-item difference, at the
-cost of a few extra logarithmic round-trips.</p>
-<p>Negentropy numbers are measured directly from the Phase-2 engine
-(<code>internal/db/p2p/negentropy</code>); the default-sync baseline is modelled as a
-naive full-identifier exchange at the same per-item accounting — a generous lower
-bound on what the real DAG-walk costs. See <code>tests/bench/reconcile/README.md</code> for methodology.</p>
-<p><b>Charts 1&ndash;4</b> are the modelled synthetic sweep (the asymptotic case).
-<b>Charts 5&ndash;6</b> are <b>measured on real nodes</b> for Phase&nbsp;3/M1: at
-per-document scale reconciliation costs <i>more</i> control traffic than broadcast
-doc-sync (one session per document), with identical payload. <b>Charts 7&ndash;8</b>
-show M2's per-collection batching collapsing that per-document overhead back to
-~broadcast levels. <b>Charts&nbsp;9&nbsp;&amp;&nbsp;12</b> are the payoff, measured on real nodes
-across <b>both axes</b> of O(diff&middot;log&nbsp;n) vs O(n). <b>Chart&nbsp;9</b>
-fixes the diff at one doc and grows the collection 50&rarr;1000: default control
-climbs linearly (<b>2.1KB&rarr;42KB</b>, ~42&nbsp;B/doc) while reconciliation stays
-nearly flat (<b>2.7KB&rarr;6.4KB</b>, log&nbsp;n) &mdash; a <b>6.5&times; gap at
-1000 docs</b>. <b>Chart&nbsp;12</b> fixes the collection at 500 docs and grows the
-difference: default is <b>flat at 21KB</b> (it lists every docID regardless), while
-reconciliation rises linearly with the diff (<b>5.3KB&rarr;23.2KB</b> from 1 to 500
-changed docs &mdash; at fixed n, O(diff&middot;log&nbsp;n) is O(diff)) and
-<b>crosses above default at ~diff&nbsp;395 (~79% of the collection)</b> &mdash; the
-measured analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
-always-on ordered-index write adds only a small per-commit overhead.
-<b>Chart&nbsp;11</b> takes it off the in-process bench and onto <b>real Docker
-containers on one host bridge</b> (2, 5, 10 benchnodes in a star; node0 diverges one
-doc in a 50-doc collection). As the network grows, reconciliation's total control
-bytes scale ~linearly with the star's edges while default broadcast grows
-super-linearly, so the reduction <b>compounds</b>: <b>1.8&times;</b> at 2 nodes,
-<b>3.7&times;</b> at 5, <b>14&times;</b> at 10 (90KB vs 1.28MB). Every run converged
-with identical document state on all nodes. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
-case: a 10-doc two-sided fork with branches <b>3 vs 50 commits deep</b>. The control
-cost is <b>unchanged by depth</b> (chart&nbsp;13) &mdash; a deep branch is still a
-single differing head &mdash; while only the payload (blocks fetched + merged) scales
-with depth (chart&nbsp;14). Reconciliation pays nothing extra to <i>discover</i> a
-deep divergence. See <code>tests/bench/reconcile/README.md</code> and
-<code>tests/bench/crossdevice/</code>.</p>
-{cards}
+<p class="take"><b>The claim:</b> to find a small difference inside a large shared set,
+default sync must communicate the whole set (<code>O(n)</code>), while reconciliation
+narrows in on just the difference (<code>O(diff&middot;log&nbsp;n)</code>). It wins in
+that regime, costs more outside it, and is <b>default-off</b>.</p>
+<p class="key"><b>How to read every chart.</b> (1) The y-axis is <b>control /
+coordination bytes</b> — the cost of <em>discovering</em> what differs, <b>not</b> the
+data transferred (payload is identical either way). (2) <b>Group&nbsp;A is modelled</b>
+(a directional sweep); <b>Groups&nbsp;B–G are measured on real nodes</b>. Where a model
+and a measurement disagree, the measurement wins. See
+<code>tests/bench/reconcile/README.md</code> for methodology.</p>
+{body}
 </body></html>"""
     with open(os.path.join(HERE, "index.html"), "w") as f:
         f.write(html)
