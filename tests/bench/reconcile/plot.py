@@ -337,24 +337,23 @@ def main():
         written.append(bar_chart(
             "07_m2_round_trips.svg",
             "Round-trips to converge 10 docs (real nodes)",
-            "Per-collection reconciliation (M2) runs ONE session, collapsing M1's per-document sessions.",
+            "One collection reconciliation session converges the whole set in round-trips "
+            "comparable to a single broadcast.",
             "control messages (round-trip proxy)",
             [
                 ("default\ndoc-sync", m2("default_sync", "ctrl_msgs"), BASELINE_COLOR),
-                ("M1 per-doc\n(10 sessions)", m2("reconcile_m1_perdoc", "ctrl_msgs"), "#e8a13a"),
-                ("M2 per-collection\n(1 session)", m2("reconcile_m2_collection", "ctrl_msgs"), NG_COLOR),
+                ("reconcile\n(1 collection session)", m2("reconcile_m2_collection", "ctrl_msgs"), NG_COLOR),
             ],
             ylog=False, yfmt=lambda v: f"{v:.0f}"))
 
         written.append(bar_chart(
             "08_m2_control_bytes.svg",
             "Control bytes to converge 10 docs (real nodes)",
-            "M2 collapses M1's per-document overhead to ~broadcast levels; same payload. Log scale.",
+            "Collection-scope reconciliation lands near a single broadcast; same payload. Log scale.",
             "control bytes (log scale)",
             [
                 ("default\ndoc-sync", m2("default_sync", "ctrl_bytes"), BASELINE_COLOR),
-                ("M1 per-doc", m2("reconcile_m1_perdoc", "ctrl_bytes"), "#e8a13a"),
-                ("M2 per-collection", m2("reconcile_m2_collection", "ctrl_bytes"), NG_COLOR),
+                ("reconcile\n(collection)", m2("reconcile_m2_collection", "ctrl_bytes"), NG_COLOR),
             ],
             ylog=True, yfmt=fmt_bytes))
 
@@ -582,21 +581,9 @@ def main():
               "<b>x</b> = set size n; <b>y</b> = round-trips. Negentropy spends 2–4 logarithmic "
               "rounds where default takes 1 — the latency price paid for the byte savings."),
          ]),
-        ("B · Per-document scale (M1, real nodes)",
-         "Measured on two real nodes. The pessimistic case — reconciling one document at a "
-         "time, where per-session overhead has nothing to amortize against.",
-         [
-             ("05_measured_control_bytes.svg",
-              "Bars = coordination bytes to converge 10 divergent docs, log-y. Per-document "
-              "reconciliation (18.9KB) costs ~44× a single broadcast (429B) — honest overhead "
-              "when there is nothing to prune."),
-             ("06_measured_round_trips.svg",
-              "Bars = round-trips, same run. 42 per-document sessions vs default's 1 — why "
-              "per-document scope is not the shipping mode."),
-         ]),
-        ("C · Per-collection batching (M2, real nodes)",
-         "The same convergence, but one session for the whole collection. This is the mode "
-         "DefraDB actually ships — it removes M1's per-document penalty.",
+        ("B · Collection convergence at broadcast cost (real nodes)",
+         "Reconciliation converges a whole small collection in one session, at round-trips "
+         "and control bytes comparable to a single default broadcast — same payload.",
          [
              ("07_m2_round_trips.svg",
               "Bars = round-trips to converge 10 docs. One collection session (4) collapses "
@@ -605,7 +592,7 @@ def main():
               "Bars = control bytes, log-y. Collection-scope reconciliation (2.2KB) lands near "
               "broadcast (1.5KB), erasing M1's 44× penalty — same payload throughout."),
          ]),
-        ("D · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)",
+        ("C · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)",
          "The core value, measured, across both variables of the complexity: grow the "
          "collection (chart 9) or grow the difference (charts 12 &amp; 15). Note what "
          "counts as a \"difference\": <b>updates to existing docs</b> keep the docID set "
@@ -625,7 +612,7 @@ def main():
               "Difference = new docIDs, so BOTH grow — default O(base+new), reconcile O(new·log n). "
               "The measured analogue of the modelled chart 3."),
          ]),
-        ("E · Maintenance cost (real node)",
+        ("D · Maintenance cost (real node)",
          "What it costs when the flag is on: a small, always-on bookkeeping write on every "
          "local commit. Paid whether or not you ever reconcile.",
          [
@@ -633,7 +620,7 @@ def main():
               "Bars = local write latency, flag off vs on. The ordered-index write adds ~4.6% "
               "(76.4→80.0ms) — bounded, and only when enabled."),
          ]),
-        ("F · Cross-container network (real Docker containers)",
+        ("E · Cross-container network (real Docker containers)",
          "Off the single-process bench and onto real Docker containers on one host bridge, "
          "scaling the network 2→10 nodes (star topology, one diverged doc in a 50-doc collection).",
          [
@@ -642,7 +629,7 @@ def main():
               "Default is super-linear (18KB→1.28MB); reconciliation linear (10→90KB) — the "
               "reduction compounds 1.8×→14×. Every run converged with identical document state."),
          ]),
-        ("G · Long-branch depth-invariance (real nodes)",
+        ("F · Long-branch depth-invariance (real nodes)",
          "The long-differing-branch case — does a deep divergence cost more to <em>discover</em>? "
          "A two-sided fork with branches 3 vs 50 commits deep.",
          [
@@ -689,7 +676,7 @@ that regime, costs more outside it, and is <b>default-off</b>.</p>
 <p class="key"><b>How to read every chart.</b> (1) The y-axis is <b>control /
 coordination bytes</b> — the cost of <em>discovering</em> what differs, <b>not</b> the
 data transferred (payload is identical either way). (2) <b>Group&nbsp;A is modelled</b>
-(a directional sweep); <b>Groups&nbsp;B–G are measured on real nodes</b>. Where a model
+(a directional sweep); <b>Groups&nbsp;B–F are measured on real nodes</b>. Where a model
 and a measurement disagree, the measurement wins. See
 <code>tests/bench/reconcile/README.md</code> for methodology.</p>
 {body}

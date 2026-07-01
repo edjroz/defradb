@@ -19,7 +19,7 @@ that regime, costs more outside it, and is <b>default-off</b>.</p>
 <p class="key"><b>How to read every chart.</b> (1) The y-axis is <b>control /
 coordination bytes</b> — the cost of <em>discovering</em> what differs, <b>not</b> the
 data transferred (payload is identical either way). (2) <b>Group&nbsp;A is modelled</b>
-(a directional sweep); <b>Groups&nbsp;B–G are measured on real nodes</b>. Where a model
+(a directional sweep); <b>Groups&nbsp;B–F are measured on real nodes</b>. Where a model
 and a measurement disagree, the measurement wins. See
 <code>tests/bench/reconcile/README.md</code> for methodology.</p>
 <section><h2>A · Modelled asymptotic sweep</h2><p class="gdesc">Synthetic sweep of the real Phase-2 negentropy engine against an idealized full-identifier baseline — the asymptotic shape at sizes too large to run end-to-end. Directional, not wall-clock; the baseline is deliberately generous, so these <em>understate</em> the real win.</p>
@@ -28,26 +28,22 @@ and a measurement disagree, the measurement wins. See
 <figure><img src="plots/03_bytes_vs_d.svg" alt="03_bytes_vs_d.svg"/><figcaption><b>x</b> = difference size d = <em>added</em> items (base ~10k); <b>y</b> = control bytes, log-log. Default is ~flat until d nears n then rises (added items enlarge the set); negentropy rises throughout, crossing ~10%. Validated by the measured chart 15 (same added-items setup).</figcaption></figure>
 <figure><img src="plots/04_rounds_vs_n.svg" alt="04_rounds_vs_n.svg"/><figcaption><b>x</b> = set size n; <b>y</b> = round-trips. Negentropy spends 2–4 logarithmic rounds where default takes 1 — the latency price paid for the byte savings.</figcaption></figure>
 </section>
-<section><h2>B · Per-document scale (M1, real nodes)</h2><p class="gdesc">Measured on two real nodes. The pessimistic case — reconciling one document at a time, where per-session overhead has nothing to amortize against.</p>
-<figure><img src="plots/05_measured_control_bytes.svg" alt="05_measured_control_bytes.svg"/><figcaption>Bars = coordination bytes to converge 10 divergent docs, log-y. Per-document reconciliation (18.9KB) costs ~44× a single broadcast (429B) — honest overhead when there is nothing to prune.</figcaption></figure>
-<figure><img src="plots/06_measured_round_trips.svg" alt="06_measured_round_trips.svg"/><figcaption>Bars = round-trips, same run. 42 per-document sessions vs default's 1 — why per-document scope is not the shipping mode.</figcaption></figure>
-</section>
-<section><h2>C · Per-collection batching (M2, real nodes)</h2><p class="gdesc">The same convergence, but one session for the whole collection. This is the mode DefraDB actually ships — it removes M1's per-document penalty.</p>
+<section><h2>B · Collection convergence at broadcast cost (real nodes)</h2><p class="gdesc">Reconciliation converges a whole small collection in one session, at round-trips and control bytes comparable to a single default broadcast — same payload.</p>
 <figure><img src="plots/07_m2_round_trips.svg" alt="07_m2_round_trips.svg"/><figcaption>Bars = round-trips to converge 10 docs. One collection session (4) collapses M1's 42 back toward default's 3.</figcaption></figure>
 <figure><img src="plots/08_m2_control_bytes.svg" alt="08_m2_control_bytes.svg"/><figcaption>Bars = control bytes, log-y. Collection-scope reconciliation (2.2KB) lands near broadcast (1.5KB), erasing M1's 44× penalty — same payload throughout.</figcaption></figure>
 </section>
-<section><h2>D · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)</h2><p class="gdesc">The core value, measured, across both variables of the complexity: grow the collection (chart 9) or grow the difference (charts 12 &amp; 15). Note what counts as a "difference": <b>updates to existing docs</b> keep the docID set fixed, so default stays flat (chart 12); <b>brand-new docs</b> enlarge it, so default grows too (chart 15, the measured mirror of chart 3). Y is coordination cost; payload is identical either way.</p>
+<section><h2>C · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)</h2><p class="gdesc">The core value, measured, across both variables of the complexity: grow the collection (chart 9) or grow the difference (charts 12 &amp; 15). Note what counts as a "difference": <b>updates to existing docs</b> keep the docID set fixed, so default stays flat (chart 12); <b>brand-new docs</b> enlarge it, so default grows too (chart 15, the measured mirror of chart 3). Y is coordination cost; payload is identical either way.</p>
 <figure><img src="plots/09_tinydiff_bytes_vs_docs.svg" alt="09_tinydiff_bytes_vs_docs.svg"/><figcaption><b>x</b> = collection size 50→1000 (one doc changed); <b>y</b> = control bytes. Default is O(n) (2.1→42KB); reconciliation ~logarithmic (2.7→6.4KB) — 6.5× fewer at 1000 docs.</figcaption></figure>
 <figure><img src="plots/12_diffsweep_bytes_vs_diff.svg" alt="12_diffsweep_bytes_vs_diff.svg"/><figcaption><b>x</b> = <em>updated</em> docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. Difference = new versions of existing docs, so the docID set stays 500 → default flat at 21KB; reconciliation linear (5.3→23.2KB), crossing only at ~79% changed.</figcaption></figure>
 <figure><img src="plots/15_newdocs_bytes_vs_added.svg" alt="15_newdocs_bytes_vs_added.svg"/><figcaption><b>x</b> = <em>brand-new</em> docs added 1→500 (500 base); <b>y</b> = control bytes. Difference = new docIDs, so BOTH grow — default O(base+new), reconcile O(new·log n). The measured analogue of the modelled chart 3.</figcaption></figure>
 </section>
-<section><h2>E · Maintenance cost (real node)</h2><p class="gdesc">What it costs when the flag is on: a small, always-on bookkeeping write on every local commit. Paid whether or not you ever reconcile.</p>
+<section><h2>D · Maintenance cost (real node)</h2><p class="gdesc">What it costs when the flag is on: a small, always-on bookkeeping write on every local commit. Paid whether or not you ever reconcile.</p>
 <figure><img src="plots/10_indexwrite_cost.svg" alt="10_indexwrite_cost.svg"/><figcaption>Bars = local write latency, flag off vs on. The ordered-index write adds ~4.6% (76.4→80.0ms) — bounded, and only when enabled.</figcaption></figure>
 </section>
-<section><h2>F · Cross-container network (real Docker containers)</h2><p class="gdesc">Off the single-process bench and onto real Docker containers on one host bridge, scaling the network 2→10 nodes (star topology, one diverged doc in a 50-doc collection).</p>
+<section><h2>E · Cross-container network (real Docker containers)</h2><p class="gdesc">Off the single-process bench and onto real Docker containers on one host bridge, scaling the network 2→10 nodes (star topology, one diverged doc in a 50-doc collection).</p>
 <figure><img src="plots/11_crossdevice_validation.svg" alt="11_crossdevice_validation.svg"/><figcaption><b>x</b> = node count 2→10; <b>y</b> = total network control bytes, log-y. Default is super-linear (18KB→1.28MB); reconciliation linear (10→90KB) — the reduction compounds 1.8×→14×. Every run converged with identical document state.</figcaption></figure>
 </section>
-<section><h2>G · Long-branch depth-invariance (real nodes)</h2><p class="gdesc">The long-differing-branch case — does a deep divergence cost more to <em>discover</em>? A two-sided fork with branches 3 vs 50 commits deep.</p>
+<section><h2>F · Long-branch depth-invariance (real nodes)</h2><p class="gdesc">The long-differing-branch case — does a deep divergence cost more to <em>discover</em>? A two-sided fork with branches 3 vs 50 commits deep.</p>
 <figure><img src="plots/13_depth_invariance_control.svg" alt="13_depth_invariance_control.svg"/><figcaption><b>x</b> = branch depth (3 vs 50); <b>y</b> = control bytes, log-y. Flat across a 16× depth increase for both — a deep branch is still one differing head.</figcaption></figure>
 <figure><img src="plots/14_depth_payload.svg" alt="14_depth_payload.svg"/><figcaption><b>x</b> = branch depth; <b>y</b> = blocks fetched. Payload scales with depth (60→1000) — depth is a transfer/merge cost, not a discovery cost.</figcaption></figure>
 </section>
