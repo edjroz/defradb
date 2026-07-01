@@ -465,8 +465,8 @@ def main():
         written.append(line_chart(
             "12_diffsweep_bytes_vs_diff.svg",
             "Control bytes vs difference size  (collection fixed at 500 docs, real nodes)",
-            "Reconciliation is O(diff·log n) — it grows with the number of changed docs; "
-            "default broadcast is O(n), flat in the diff. They cross when the diff gets large.",
+            "At fixed n, O(diff·log n) is linear in diff (log n constant); default is O(n), flat. "
+            "Reconciliation crosses ABOVE default at ~diff 395 (~79% of the collection).",
             "changed documents  (difference size, log scale)",
             "control bytes",
             [
@@ -560,10 +560,10 @@ climbs linearly (<b>2.1KB&rarr;42KB</b>, ~42&nbsp;B/doc) while reconciliation st
 nearly flat (<b>2.7KB&rarr;6.4KB</b>, log&nbsp;n) &mdash; a <b>6.5&times; gap at
 1000 docs</b>. <b>Chart&nbsp;12</b> fixes the collection at 500 docs and grows the
 difference: default is <b>flat at 21KB</b> (it lists every docID regardless), while
-reconciliation rises with the diff (<b>5.3KB&rarr;14.9KB</b> from 1 to 250 changed
-docs). Reconciliation still wins at <b>half the collection changed</b> (250/500);
-the crossover where a large diff makes it lose is beyond that &mdash; the measured
-analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
+reconciliation rises linearly with the diff (<b>5.3KB&rarr;23.2KB</b> from 1 to 500
+changed docs &mdash; at fixed n, O(diff&middot;log&nbsp;n) is O(diff)) and
+<b>crosses above default at ~diff&nbsp;395 (~79% of the collection)</b> &mdash; the
+measured analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
 always-on ordered-index write adds only a small per-commit overhead.
 <b>Chart&nbsp;11</b> takes it off the in-process bench and onto <b>real Docker
 containers on one host bridge</b> (2, 5, 10 benchnodes in a star; node0 diverges one

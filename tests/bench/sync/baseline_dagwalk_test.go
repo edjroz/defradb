@@ -183,6 +183,18 @@ func Benchmark_Sync_Diff_docs500_diff50(b *testing.B)  { runSyncDiff(b, 500, 50)
 func Benchmark_Sync_Diff_docs500_diff100(b *testing.B) { runSyncDiff(b, 500, 100) }
 func Benchmark_Sync_Diff_docs500_diff250(b *testing.B) { runSyncDiff(b, 500, 250) }
 
+// Denser high-diff points matching the reconcile sweep. Default control is
+// diff-independent (it lists every docID regardless), so these should stay ~flat —
+// the flat line reconciliation eventually crosses above.
+func Benchmark_Sync_Diff_docs500_diff25(b *testing.B)  { runSyncDiff(b, 500, 25) }
+func Benchmark_Sync_Diff_docs500_diff150(b *testing.B) { runSyncDiff(b, 500, 150) }
+func Benchmark_Sync_Diff_docs500_diff200(b *testing.B) { runSyncDiff(b, 500, 200) }
+func Benchmark_Sync_Diff_docs500_diff300(b *testing.B) { runSyncDiff(b, 500, 300) }
+func Benchmark_Sync_Diff_docs500_diff350(b *testing.B) { runSyncDiff(b, 500, 350) }
+func Benchmark_Sync_Diff_docs500_diff400(b *testing.B) { runSyncDiff(b, 500, 400) }
+func Benchmark_Sync_Diff_docs500_diff450(b *testing.B) { runSyncDiff(b, 500, 450) }
+func Benchmark_Sync_Diff_docs500_diff500(b *testing.B) { runSyncDiff(b, 500, 500) }
+
 // sampleReceiver snapshots the receiver's counters and blockstore growth.
 func sampleReceiver(
 	ctx context.Context,

@@ -306,3 +306,32 @@ func Benchmark_Reconcile_Collection_Diff_docs500_diff100(b *testing.B) {
 func Benchmark_Reconcile_Collection_Diff_docs500_diff250(b *testing.B) {
 	runReconcileCollectionDiff(b, 500, 250)
 }
+
+// Denser high-diff points: at a fixed collection O(diff·log n) is O(diff) (log n is
+// constant), so control grows linearly in diff — and eventually crosses ABOVE the
+// diff-independent default broadcast. These extend the sweep to the whole collection
+// (diff=500) so the crossover is captured, not just extrapolated.
+func Benchmark_Reconcile_Collection_Diff_docs500_diff25(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 25)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff150(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 150)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff200(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 200)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff300(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 300)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff350(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 350)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff400(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 400)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff450(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 450)
+}
+func Benchmark_Reconcile_Collection_Diff_docs500_diff500(b *testing.B) {
+	runReconcileCollectionDiff(b, 500, 500)
+}

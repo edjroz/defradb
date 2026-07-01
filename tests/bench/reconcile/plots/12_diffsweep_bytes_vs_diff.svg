@@ -1,46 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="880" height="470" viewBox="0 0 880 470" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
 <rect width="880" height="470" fill="white"/>
 <text x="78" y="26" font-size="17" font-weight="700" fill="#222222">Control bytes vs difference size  (collection fixed at 500 docs, real nodes)</text>
-<text x="78" y="44" font-size="12" fill="#666">Reconciliation is O(diff·log n) — it grows with the number of changed docs; default broadcast is O(n), flat in the diff. They cross when the diff gets large.</text>
+<text x="78" y="44" font-size="12" fill="#666">At fixed n, O(diff·log n) is linear in diff (log n constant); default is O(n), flat. Reconciliation crosses ABOVE default at ~diff 395 (~79% of the collection).</text>
 <line x1="78" y1="406.0" x2="630" y2="406.0" stroke="#e6e6e6"/>
 <text x="70" y="410.0" font-size="11" fill="#444444" text-anchor="end">5KB</text>
 <line x1="78" y1="336.0" x2="630" y2="336.0" stroke="#e6e6e6"/>
-<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">8KB</text>
+<text x="70" y="340.0" font-size="11" fill="#444444" text-anchor="end">9KB</text>
 <line x1="78" y1="266.0" x2="630" y2="266.0" stroke="#e6e6e6"/>
 <text x="70" y="270.0" font-size="11" fill="#444444" text-anchor="end">12KB</text>
 <line x1="78" y1="196.0" x2="630" y2="196.0" stroke="#e6e6e6"/>
-<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">15KB</text>
+<text x="70" y="200.0" font-size="11" fill="#444444" text-anchor="end">16KB</text>
 <line x1="78" y1="126.0" x2="630" y2="126.0" stroke="#e6e6e6"/>
-<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">18KB</text>
+<text x="70" y="130.0" font-size="11" fill="#444444" text-anchor="end">20KB</text>
 <line x1="78" y1="56.0" x2="630" y2="56.0" stroke="#e6e6e6"/>
-<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">21KB</text>
+<text x="70" y="60.0" font-size="11" fill="#444444" text-anchor="end">23KB</text>
 <line x1="78.0" y1="56" x2="78.0" y2="406" stroke="#e6e6e6"/>
 <text x="78.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">1</text>
-<line x1="308.2" y1="56" x2="308.2" y2="406" stroke="#e6e6e6"/>
-<text x="308.2" y="424.0" font-size="11" fill="#444444" text-anchor="middle">10</text>
-<line x1="538.4" y1="56" x2="538.4" y2="406" stroke="#e6e6e6"/>
-<text x="538.4" y="424.0" font-size="11" fill="#444444" text-anchor="middle">100</text>
+<line x1="282.5" y1="56" x2="282.5" y2="406" stroke="#e6e6e6"/>
+<text x="282.5" y="424.0" font-size="11" fill="#444444" text-anchor="middle">10</text>
+<line x1="487.0" y1="56" x2="487.0" y2="406" stroke="#e6e6e6"/>
+<text x="487.0" y="424.0" font-size="11" fill="#444444" text-anchor="middle">100</text>
 <line x1="78" y1="56" x2="78" y2="406" stroke="#444444"/>
 <line x1="78" y1="406" x2="630" y2="406" stroke="#444444"/>
 <text x="354" y="452" font-size="12" fill="#222222" text-anchor="middle">changed documents  (difference size, log scale)</text>
 <text x="20" y="231" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 20 231)">control bytes</text>
-<polyline points="78.0,56.0 308.2,56.0 469.1,56.0 538.4,56.0 630.0,56.0" fill="none" stroke="#d1495b" stroke-width="2.5" stroke-dasharray="6 4"/>
-<circle cx="78.0" cy="56.0" r="3.4" fill="#d1495b"/>
-<circle cx="308.2" cy="56.0" r="3.4" fill="#d1495b"/>
-<circle cx="469.1" cy="56.0" r="3.4" fill="#d1495b"/>
-<circle cx="538.4" cy="56.0" r="3.4" fill="#d1495b"/>
-<circle cx="630.0" cy="56.0" r="3.4" fill="#d1495b"/>
-<polyline points="78.0,406.0 308.2,406.0 469.1,374.3 538.4,336.6 630.0,192.5" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<polyline points="78.0,98.7 282.5,98.7 363.9,98.7 425.5,98.7 487.0,98.7 523.1,98.7 548.6,98.7 568.4,98.7 584.6,98.7 598.3,98.7 610.2,98.7 620.6,98.7 630.0,98.7" fill="none" stroke="#d1495b" stroke-width="2.5" stroke-dasharray="6 4"/>
+<circle cx="78.0" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="282.5" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="363.9" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="425.5" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="487.0" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="523.1" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="548.6" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="568.4" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="584.6" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="598.3" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="610.2" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="620.6" cy="98.7" r="3.4" fill="#d1495b"/>
+<circle cx="630.0" cy="98.7" r="3.4" fill="#d1495b"/>
+<polyline points="78.0,406.0 282.5,406.0 363.9,405.3 425.5,378.1 487.0,345.1 523.1,307.6 548.6,265.7 568.4,218.5 584.6,205.2 598.3,151.4 610.2,93.1 620.6,74.5 630.0,56.0" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
 <circle cx="78.0" cy="406.0" r="3.4" fill="#2e86ab"/>
-<circle cx="308.2" cy="406.0" r="3.4" fill="#2e86ab"/>
-<circle cx="469.1" cy="374.3" r="3.4" fill="#2e86ab"/>
-<circle cx="538.4" cy="336.6" r="3.4" fill="#2e86ab"/>
-<circle cx="630.0" cy="192.5" r="3.4" fill="#2e86ab"/>
+<circle cx="282.5" cy="406.0" r="3.4" fill="#2e86ab"/>
+<circle cx="363.9" cy="405.3" r="3.4" fill="#2e86ab"/>
+<circle cx="425.5" cy="378.1" r="3.4" fill="#2e86ab"/>
+<circle cx="487.0" cy="345.1" r="3.4" fill="#2e86ab"/>
+<circle cx="523.1" cy="307.6" r="3.4" fill="#2e86ab"/>
+<circle cx="548.6" cy="265.7" r="3.4" fill="#2e86ab"/>
+<circle cx="568.4" cy="218.5" r="3.4" fill="#2e86ab"/>
+<circle cx="584.6" cy="205.2" r="3.4" fill="#2e86ab"/>
+<circle cx="598.3" cy="151.4" r="3.4" fill="#2e86ab"/>
+<circle cx="610.2" cy="93.1" r="3.4" fill="#2e86ab"/>
+<circle cx="620.6" cy="74.5" r="3.4" fill="#2e86ab"/>
+<circle cx="630.0" cy="56.0" r="3.4" fill="#2e86ab"/>
 <line x1="646" y1="62" x2="668" y2="62" stroke="#d1495b" stroke-width="3"/>
 <text x="674" y="66" font-size="11.5" fill="#222222">default doc-sync (O(n))</text>
 <line x1="646" y1="84" x2="668" y2="84" stroke="#2e86ab" stroke-width="3"/>
 <text x="674" y="88" font-size="11.5" fill="#222222">reconcile (O(diff·log n))</text>
-<text x="630.0" y="47.0" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
+<text x="630.0" y="89.7" font-size="11" font-weight="600" fill="#d1495b" text-anchor="middle">21KB</text>
 <text x="78.0" y="397.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">5KB</text>
-<text x="630.0" y="183.5" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">15KB</text>
+<text x="630.0" y="47.0" font-size="11" font-weight="600" fill="#2e86ab" text-anchor="middle">23KB</text>
 </svg>
