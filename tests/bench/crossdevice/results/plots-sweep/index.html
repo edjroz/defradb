@@ -1,9 +1,11 @@
-<!doctype html><meta charset=utf-8><title>Docker sweep — set reconciliation</title>
+<!doctype html><meta charset=utf-8><title>Docker node-count sweep — set reconciliation</title>
 <body style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:900px;margin:2rem auto;color:#222">
-<h1>Dockerised cross-device sweep — tiny-diff</h1>
-<p>Two benchnode containers on one host, large shared base with one diverged document.
-Net control bytes = sum of both nodes' sent+received over the measured window.</p>
-<img src="01_ctrlbytes_vs_docs.svg" width="820"><img src="02_reduction_vs_docs.svg" width="820">
+<h1>Dockerised cross-container sweep — tiny-diff, by node count</h1>
+<p>N benchnode containers on one host bridge (star topology, node0 the diverging hub),
+large shared base with one diverged document. Net control bytes = sum of every node's
+sent+received over the measured window. Reconciliation scales ~linearly with the star's
+edges; default broadcast grows super-linearly, so the reduction compounds with node count.</p>
+<img src="01_ctrlbytes_vs_nodes.svg" width="820"><img src="02_reduction_vs_nodes.svg" width="820">
 <table border=1 cellpadding=6 style="border-collapse:collapse;margin-top:1rem">
-<tr><th>docs</th><th>ranges bytes</th><th>default bytes</th><th>reduction</th><th>converged</th><th>stateMatch</th></tr>
-<tr><td>50</td><td>10008</td><td>17984</td><td>1.80x</td><td>True</td><td>True</td></tr><tr><td>100</td><td>18085</td><td>35784</td><td>1.98x</td><td>True</td><td>True</td></tr><tr><td>500</td><td>21889</td><td>178190</td><td>8.14x</td><td>True</td><td>True</td></tr><tr><td>1000</td><td>26601</td><td>356190</td><td>13.39x</td><td>True</td><td>True</td></tr></table></body>
+<tr><th>nodes</th><th>ranges bytes</th><th>default bytes</th><th>reduction</th><th>converged</th><th>stateMatch</th></tr>
+<tr><td>2</td><td>10008</td><td>17984</td><td>1.80x</td><td>True</td><td>True</td></tr><tr><td>5</td><td>40032</td><td>148190</td><td>3.70x</td><td>True</td><td>True</td></tr><tr><td>10</td><td>90072</td><td>1283120</td><td>14.25x</td><td>True</td><td>True</td></tr></table></body>

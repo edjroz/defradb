@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="480" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+<rect width="820" height="480" fill="white"/>
+<text x="84" y="28" font-size="16" font-weight="700" fill="#222222">Control bytes to converge a 1-doc diff (dockerised star, log-y)</text>
+<line x1="84" y1="416.0" x2="670" y2="416.0" stroke="#e6e6e6"/>
+<text x="76" y="420.0" font-size="11" fill="#444444" text-anchor="end">10k</text>
+<line x1="84" y1="295.3" x2="670" y2="295.3" stroke="#e6e6e6"/>
+<text x="76" y="299.3" font-size="11" fill="#444444" text-anchor="end">100k</text>
+<line x1="84" y1="174.7" x2="670" y2="174.7" stroke="#e6e6e6"/>
+<text x="76" y="178.7" font-size="11" fill="#444444" text-anchor="end">1.0M</text>
+<line x1="84" y1="54.0" x2="670" y2="54.0" stroke="#e6e6e6"/>
+<text x="76" y="58.0" font-size="11" fill="#444444" text-anchor="end">10.0M</text>
+<line x1="84.0" y1="416" x2="84.0" y2="421" stroke="#444444"/>
+<text x="84.0" y="436" font-size="11" fill="#444444" text-anchor="middle">2</text>
+<line x1="303.8" y1="416" x2="303.8" y2="421" stroke="#444444"/>
+<text x="303.8" y="436" font-size="11" fill="#444444" text-anchor="middle">5</text>
+<line x1="670.0" y1="416" x2="670.0" y2="421" stroke="#444444"/>
+<text x="670.0" y="436" font-size="11" fill="#444444" text-anchor="middle">10</text>
+<text x="377" y="462" font-size="12" fill="#222222" text-anchor="middle">nodes (containers on one host)</text>
+<text x="18" y="235" font-size="12" fill="#222222" text-anchor="middle" transform="rotate(-90 18 235)">net control bytes (all nodes)</text>
+<polyline points="84.0,416.0 303.8,343.3 670.0,300.8" fill="none" stroke="#2e86ab" stroke-width="2.5"/>
+<circle cx="84.0" cy="416.0" r="3.5" fill="#2e86ab"/>
+<circle cx="303.8" cy="343.3" r="3.5" fill="#2e86ab"/>
+<circle cx="670.0" cy="300.8" r="3.5" fill="#2e86ab"/>
+<rect x="684" y="60" width="12" height="12" fill="#2e86ab"/>
+<text x="700" y="71" font-size="12" fill="#222222">ranges (RBSR)</text>
+<polyline points="84.0,385.2 303.8,274.7 670.0,161.6" fill="none" stroke="#d1495b" stroke-width="2.5"/>
+<circle cx="84.0" cy="385.2" r="3.5" fill="#d1495b"/>
+<circle cx="303.8" cy="274.7" r="3.5" fill="#d1495b"/>
+<circle cx="670.0" cy="161.6" r="3.5" fill="#d1495b"/>
+<rect x="684" y="82" width="12" height="12" fill="#d1495b"/>
+<text x="700" y="93" font-size="12" fill="#222222">default (broadcast)</text>
+</svg>
