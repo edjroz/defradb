@@ -213,3 +213,11 @@ func Benchmark_Sync_IncrementalTail_docs10_base5_tail1(b *testing.B) {
 }
 
 func Benchmark_Sync_ManyHead_docs10_base5_k3(b *testing.B) { runManyHead(b, 10, 5, 3) }
+
+// Deep-branch contrasts to the Benchmark_Reconcile_*_k50 cases: the divergent
+// branches are 50 commits deep instead of 3. Both sync and reconciliation discover
+// divergence head-first, so their control cost is expected to be ~depth-invariant;
+// these let the approval report assert that head-to-head rather than claim it.
+func Benchmark_Sync_SingleDoc_base5_k3(b *testing.B)           { runManyHead(b, 1, 5, 3) }
+func Benchmark_Sync_SingleDoc_DeepFork_base5_k50(b *testing.B) { runManyHead(b, 1, 5, 50) }
+func Benchmark_Sync_ManyHead_docs10_base5_k50(b *testing.B)    { runManyHead(b, 10, 5, 50) }

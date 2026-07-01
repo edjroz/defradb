@@ -12,7 +12,7 @@ change to the default (flag-off) path.
 All charts referenced below are in [`index.html`](index.html) (regenerate with
 `python3 plot.py`). Numbers are Apple M4 Pro; see the device matrix in the gate doc.
 
-## The story in six measurements
+## The story in seven measurements
 
 | # | What | Result | Source |
 |---|---|---|---|
@@ -23,6 +23,7 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
 | 4b | **Payoff vs difference size** (real nodes) | collection fixed at 500, diff 1→250: default is **flat at 21KB** (`O(n)`, lists every docID) while reconciliation rises (**5.3→14.9KB**, `O(diff·log n)`) and **still wins at 50% of the collection changed** — the measured `O(diff·log n)` vs `O(n)` trade-off | chart 12, `data/measured_diffsweep.csv` |
 | 5 | **Compute** (segment tree) | full-range fingerprint is **O(log n) ~280ns flat** at n=100k vs the Vector's O(n) ~5.8ms (**~21,000×**); per-session build is O(n) ~31ms at n=100k (amortised across the session) | `negentropy` micro-benchmarks |
 | 6 | **The cost** (index-write, real node) | the always-on per-commit ordered-index write adds **~4.6%** local write latency (76.4ms→79.96ms for 50 docs × 5 updates) and **~2.8%** heap | chart 10, `data/measured_indexwrite.csv` |
+| 7 | **Long-branch depth-invariance** (real nodes) | branches **3→50 commits deep** (16×): reconciliation control is **flat** (18.97→18.98 KB, 42 round-trips) — as is default sync (429 B) — while payload scales **60→1000 blocks**. Depth is a payload/merge cost, not a discovery cost | charts 13–14, `data/measured_depthinvariance.csv` |
 
 ## What each measurement means
 
@@ -38,6 +39,13 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
   *coordination* cost, not the blocks transferred.
 - **The maintenance cost is small and bounded** (≈5%), comfortably inside the gate's
   ≤15% budget, and is paid only when the flag is on.
+- **Depth is not a cost axis for discovery.** Measurement 7: a divergent branch 50
+  commits deep costs the same control traffic to *find* as one 3 commits deep — both
+  reconciliation and default sync discover divergence head-first, so only the payload
+  (blocks fetched + merged) grows with depth. The win/cost story is set by collection
+  size and diff *count* (measurements 4a/4b), not branch depth. (In this M1 per-doc
+  regime reconciliation's control is higher than broadcast — measurement 2 — so
+  charts 13–14 are read for *depth-invariance*, not for a per-doc byte win.)
 
 ## Cross-device validation
 

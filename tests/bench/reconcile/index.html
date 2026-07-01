@@ -38,7 +38,12 @@ always-on ordered-index write adds only a small per-commit overhead.
 LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
 collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
 default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
-devices. See <code>tests/bench/reconcile/README.md</code> and
+devices. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
+case: a 10-doc two-sided fork with branches <b>3 vs 50 commits deep</b>. The control
+cost is <b>unchanged by depth</b> (chart&nbsp;13) &mdash; a deep branch is still a
+single differing head &mdash; while only the payload (blocks fetched + merged) scales
+with depth (chart&nbsp;14). Reconciliation pays nothing extra to <i>discover</i> a
+deep divergence. See <code>tests/bench/reconcile/README.md</code> and
 <code>tests/bench/crossdevice/</code>.</p>
 <figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/></figure>
 <figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/></figure>
@@ -52,4 +57,6 @@ devices. See <code>tests/bench/reconcile/README.md</code> and
 <figure><img src="plots/10_indexwrite_cost.svg" alt="10_indexwrite_cost.svg"/></figure>
 <figure><img src="plots/11_crossdevice_validation.svg" alt="11_crossdevice_validation.svg"/></figure>
 <figure><img src="plots/12_diffsweep_bytes_vs_diff.svg" alt="12_diffsweep_bytes_vs_diff.svg"/></figure>
+<figure><img src="plots/13_depth_invariance_control.svg" alt="13_depth_invariance_control.svg"/></figure>
+<figure><img src="plots/14_depth_payload.svg" alt="14_depth_payload.svg"/></figure>
 </body></html>

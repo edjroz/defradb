@@ -465,6 +465,54 @@ def main():
             ],
             xlog=True, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_bytes))
 
+    # 13/14. Depth-invariance (real nodes): a two-sided fork over 10 docs, with the
+    # divergent branches 3 vs 50 commits deep. Both sync and reconciliation discover
+    # divergence head-first, so the control cost is unchanged by depth (chart 13)
+    # while the payload — blocks fetched + merged — scales with it (chart 14). This is
+    # the long-differing-branch result: reconciliation pays nothing extra to discover
+    # a deep divergence; depth is a pure payload/merge cost.
+    di_path = os.path.join(HERE, "data", "measured_depthinvariance.csv")
+    if os.path.exists(di_path):
+        with open(di_path, newline="") as f:
+            dirows = list(csv.DictReader(f))
+
+        def di(scenario, approach, depth, key):
+            for r in dirows:
+                if (r["scenario"] == scenario and r["approach"] == approach
+                        and int(r["depth"]) == depth):
+                    return float(r[key])
+            return 0.0
+
+        written.append(bar_chart(
+            "13_depth_invariance_control.svg",
+            "Control cost is invariant to branch depth (10-doc fork, real nodes)",
+            "Branches 16x deeper (k=3 -> k=50) leave control bytes unchanged; only the "
+            "payload scales (chart 14). Log scale.",
+            "control bytes (log scale)",
+            [
+                ("default sync\nk=3", di("manyhead_docs10", "default_sync", 3, "ctrl_bytes"), BASELINE_COLOR),
+                ("default sync\nk=50", di("manyhead_docs10", "default_sync", 50, "ctrl_bytes"), BASELINE_COLOR),
+                ("reconcile\nk=3", di("manyhead_docs10", "reconcile", 3, "ctrl_bytes"), NG_COLOR),
+                ("reconcile\nk=50", di("manyhead_docs10", "reconcile", 50, "ctrl_bytes"), NG_COLOR),
+            ],
+            ylog=True, yfmt=fmt_bytes))
+
+        recon_blocks = sorted(
+            (int(r["depth"]), float(r["blocks"])) for r in dirows
+            if r["scenario"] == "manyhead_docs10" and r["approach"] == "reconcile")
+        written.append(line_chart(
+            "14_depth_payload.svg",
+            "Payload scales with branch depth (same 10-doc fork, real nodes)",
+            "The blocks reconciliation fetches + merges grow with depth — the cost it "
+            "does NOT avoid (contrast the flat control bytes in chart 13).",
+            "branch depth  (commits per branch)",
+            "blocks transferred",
+            [
+                {"label": "reconcile (blocks fetched)", "color": NG_COLOR, "points": recon_blocks,
+                 "notes": [(d, v, fmt_int(v)) for d, v in recon_blocks]},
+            ],
+            xlog=False, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_int))
+
     # index.html
     cards = "\n".join(
         f'<figure><img src="plots/{fn}" alt="{fn}"/></figure>' for fn in written)
@@ -508,7 +556,12 @@ always-on ordered-index write adds only a small per-commit overhead.
 LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
 collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
 default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
-devices. See <code>tests/bench/reconcile/README.md</code> and
+devices. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
+case: a 10-doc two-sided fork with branches <b>3 vs 50 commits deep</b>. The control
+cost is <b>unchanged by depth</b> (chart&nbsp;13) &mdash; a deep branch is still a
+single differing head &mdash; while only the payload (blocks fetched + merged) scales
+with depth (chart&nbsp;14). Reconciliation pays nothing extra to <i>discover</i> a
+deep divergence. See <code>tests/bench/reconcile/README.md</code> and
 <code>tests/bench/crossdevice/</code>.</p>
 {cards}
 </body></html>"""
