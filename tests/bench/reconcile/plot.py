@@ -526,6 +526,40 @@ def main():
             ],
             xlog=False, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_int))
 
+    # 15. The measured mirror of the modelled chart 3: the difference is brand-NEW
+    # documents (not updates to existing ones), so the default's docID list grows with the
+    # diff too. Both lines rise — default ~O(base+new), reconcile ~O(new·log n) — unlike
+    # chart 12's update-churn case where the default stays flat. This is the apples-to-apples
+    # measured version of the model's difference-size sweep.
+    nd_path = os.path.join(HERE, "data", "measured_newdocs.csv")
+    if os.path.exists(nd_path):
+        with open(nd_path, newline="") as f:
+            ndrows = list(csv.DictReader(f))
+
+        def ndseries(approach):
+            return sorted((float(r["new"]), float(r["ctrl_bytes"])) for r in ndrows
+                          if r["approach"] == approach)
+
+        ndd = ndseries("default_sync")
+        ndr = ndseries("reconcile")
+        written.append(line_chart(
+            "15_newdocs_bytes_vs_added.svg",
+            "Control bytes vs difference size — brand-NEW docs (500 base, real nodes)",
+            "Measured mirror of chart 3: the diff is new documents, so the default's docID "
+            "list grows too. Both rise — default O(base+new), reconcile O(new·log n).",
+            "new documents added  (difference size, log scale)",
+            "control bytes",
+            [
+                {"label": "default doc-sync (O(base+new))", "color": BASELINE_COLOR, "points": ndd,
+                 "dashed": True,
+                 "notes": [(ndd[0][0], ndd[0][1], fmt_bytes(ndd[0][1])),
+                           (ndd[-1][0], ndd[-1][1], fmt_bytes(ndd[-1][1]))] if ndd else []},
+                {"label": "reconcile (O(new·log n))", "color": NG_COLOR, "points": ndr,
+                 "notes": [(ndr[0][0], ndr[0][1], fmt_bytes(ndr[0][1])),
+                           (ndr[-1][0], ndr[-1][1], fmt_bytes(ndr[-1][1]))] if ndr else []},
+            ],
+            xlog=True, ylog=False, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_bytes))
+
     # index.html — grouped, each group with a blurb and each chart with a 2-line caption.
     groups = [
         ("A · Modelled asymptotic sweep",
@@ -541,9 +575,9 @@ def main():
               "<b>x</b> = set size n; <b>y</b> = default ÷ negentropy. Chart 1 as a ratio: "
               "the saving compounds with set size — the larger the shared set, the bigger the win."),
              ("03_bytes_vs_d.svg",
-              "<b>x</b> = difference size d (set fixed at 10k); <b>y</b> = control bytes, log-log. "
-              "Default is flat (ships the whole set); negentropy rises with the diff and crosses "
-              "~10% here — but this model is pessimistic, so read the measured chart 12."),
+              "<b>x</b> = difference size d = <em>added</em> items (base ~10k); <b>y</b> = control bytes, log-log. "
+              "Default is ~flat until d nears n then rises (added items enlarge the set); negentropy rises "
+              "throughout, crossing ~10%. Validated by the measured chart 15 (same added-items setup)."),
              ("04_rounds_vs_n.svg",
               "<b>x</b> = set size n; <b>y</b> = round-trips. Negentropy spends 2–4 logarithmic "
               "rounds where default takes 1 — the latency price paid for the byte savings."),
@@ -573,16 +607,23 @@ def main():
          ]),
         ("D · The payoff — both axes of O(diff·log n) vs O(n) (real nodes)",
          "The core value, measured, across both variables of the complexity: grow the "
-         "collection with the diff fixed (chart 9), or grow the diff with the collection "
-         "fixed (chart 12). Y is coordination cost; payload is identical either way.",
+         "collection (chart 9) or grow the difference (charts 12 &amp; 15). Note what "
+         "counts as a \"difference\": <b>updates to existing docs</b> keep the docID set "
+         "fixed, so default stays flat (chart 12); <b>brand-new docs</b> enlarge it, so "
+         "default grows too (chart 15, the measured mirror of chart 3). Y is coordination "
+         "cost; payload is identical either way.",
          [
              ("09_tinydiff_bytes_vs_docs.svg",
               "<b>x</b> = collection size 50→1000 (one doc changed); <b>y</b> = control bytes. "
               "Default is O(n) (2.1→42KB); reconciliation ~logarithmic (2.7→6.4KB) — 6.5× fewer at 1000 docs."),
              ("12_diffsweep_bytes_vs_diff.svg",
-              "<b>x</b> = changed docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. "
-              "Default flat at O(n)=21KB (it lists every docID regardless); reconciliation linear "
-              "(5.3→23.2KB), crossing above only at ~79% changed."),
+              "<b>x</b> = <em>updated</em> docs 1→500 (collection fixed at 500); <b>y</b> = control bytes. "
+              "Difference = new versions of existing docs, so the docID set stays 500 → default flat at 21KB; "
+              "reconciliation linear (5.3→23.2KB), crossing only at ~79% changed."),
+             ("15_newdocs_bytes_vs_added.svg",
+              "<b>x</b> = <em>brand-new</em> docs added 1→500 (500 base); <b>y</b> = control bytes. "
+              "Difference = new docIDs, so BOTH grow — default O(base+new), reconcile O(new·log n). "
+              "The measured analogue of the modelled chart 3."),
          ]),
         ("E · Maintenance cost (real node)",
          "What it costs when the flag is on: a small, always-on bookkeeping write on every "

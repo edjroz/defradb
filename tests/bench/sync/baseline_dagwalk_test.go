@@ -195,6 +195,53 @@ func Benchmark_Sync_Diff_docs500_diff400(b *testing.B) { runSyncDiff(b, 500, 400
 func Benchmark_Sync_Diff_docs500_diff450(b *testing.B) { runSyncDiff(b, 500, 450) }
 func Benchmark_Sync_Diff_docs500_diff500(b *testing.B) { runSyncDiff(b, 500, 500) }
 
+// runSyncNewDocs is the default-broadcast contrast to runReconcileCollectionNewDocs —
+// the measured mirror of the modelled chart-3 baseline. A baseCount shared base, then
+// newCount brand-new docs on the source. The receiver cannot discover new docIDs on its
+// own, so (like the model's generous full-identifier baseline) it is handed the whole
+// base+new docID list; its control therefore scales with the TOTAL doc count and grows
+// with the diff — unlike the update-churn case (runSyncDiff) where the docID list is
+// fixed and the default stays flat.
+func runSyncNewDocs(b *testing.B, baseCount, newCount int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false)
+		recv := startSyncNode(ctx, b, true)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		baseIDs := seedDocs(ctx, b, srcCol, baseCount, 0)
+		connectNodes(ctx, b, recv, src)
+		recv.measuredSync(ctx, b, baseIDs, baseCount) // untimed: establish shared base
+		newIDs := seedNamedDocs(ctx, b, srcCol, "new", newCount)
+		allIDs := append(append([]string{}, baseIDs...), newIDs...) // recv must be told every docID
+
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.measuredSync(ctx, b, allIDs, newCount) // all docIDs listed, newCount merges land
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+func Benchmark_Sync_NewDocs_base500_new1(b *testing.B)   { runSyncNewDocs(b, 500, 1) }
+func Benchmark_Sync_NewDocs_base500_new10(b *testing.B)  { runSyncNewDocs(b, 500, 10) }
+func Benchmark_Sync_NewDocs_base500_new50(b *testing.B)  { runSyncNewDocs(b, 500, 50) }
+func Benchmark_Sync_NewDocs_base500_new100(b *testing.B) { runSyncNewDocs(b, 500, 100) }
+func Benchmark_Sync_NewDocs_base500_new250(b *testing.B) { runSyncNewDocs(b, 500, 250) }
+func Benchmark_Sync_NewDocs_base500_new500(b *testing.B) { runSyncNewDocs(b, 500, 500) }
+
 // sampleReceiver snapshots the receiver's counters and blockstore growth.
 func sampleReceiver(
 	ctx context.Context,

@@ -1,0 +1,13 @@
+approach,base,new,ctrl_bytes,ctrl_msgs
+reconcile,500,1,5229,4
+reconcile,500,10,15125,4
+reconcile,500,50,25266,4
+reconcile,500,100,27166,4
+reconcile,500,250,32866,4
+reconcile,500,500,42366,4
+default_sync,500,1,21053,1
+default_sync,500,10,21431,1
+default_sync,500,50,23111,1
+default_sync,500,100,25211,1
+default_sync,500,250,31511,1
+default_sync,500,500,42011,1

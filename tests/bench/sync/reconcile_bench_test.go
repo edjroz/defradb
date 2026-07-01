@@ -335,3 +335,63 @@ func Benchmark_Reconcile_Collection_Diff_docs500_diff450(b *testing.B) {
 func Benchmark_Reconcile_Collection_Diff_docs500_diff500(b *testing.B) {
 	runReconcileCollectionDiff(b, 500, 500)
 }
+
+// runReconcileCollectionNewDocs is the "added items" companion to
+// runReconcileCollectionDiff — the measured mirror of the modelled chart 3. Instead of
+// updating existing docs (chart 12, where the default's docID list stays flat), it adds
+// newCount BRAND-NEW documents on the source only. Collection reconciliation discovers
+// the new docIDs itself, so its control tracks O(newCount·log n); the default contrast
+// (runSyncNewDocs) must enumerate the whole base+new docID set, so there BOTH lines grow
+// with the diff — exactly the shape the model sweeps.
+func runReconcileCollectionNewDocs(b *testing.B, baseCount, newCount int) {
+	requireSyncBenchEnabled(b)
+	ctx := context.Background()
+	samples := make([]syncSample, 0, b.N)
+
+	for i := 0; i < b.N; i++ {
+		b.StopTimer()
+		src := startSyncNode(ctx, b, false, withReconciliation)
+		recv := startSyncNode(ctx, b, true, withReconciliation)
+		srcCol := src.addCollection(ctx, b)
+		recv.addCollection(ctx, b)
+		seedDocs(ctx, b, srcCol, baseCount, 0)
+		connectNodes(ctx, b, recv, src)
+		recv.reconcileCollection(ctx, b, src.peerID(ctx, b)) // untimed: establish shared base
+		seedNamedDocs(ctx, b, srcCol, "new", newCount)       // brand-new docs on src only
+
+		srcPeerID := src.peerID(ctx, b)
+		recv.counters.Reset()
+		blocksBefore, bytesBefore := blockstoreStats(ctx, b, recv)
+		heapBefore := heapAllocMiB()
+		b.StartTimer()
+		dur := recv.reconcileCollection(ctx, b, srcPeerID)
+		b.StopTimer()
+
+		s := sampleReceiver(ctx, b, recv, blocksBefore, bytesBefore, heapBefore)
+		s.syncMs = float64(dur.Microseconds()) / 1000
+		samples = append(samples, s)
+		assertConverged(ctx, b, src, recv)
+		recv.close(ctx)
+		src.close(ctx)
+	}
+	report(b, samples)
+}
+
+func Benchmark_Reconcile_Collection_NewDocs_base500_new1(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 1)
+}
+func Benchmark_Reconcile_Collection_NewDocs_base500_new10(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 10)
+}
+func Benchmark_Reconcile_Collection_NewDocs_base500_new50(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 50)
+}
+func Benchmark_Reconcile_Collection_NewDocs_base500_new100(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 100)
+}
+func Benchmark_Reconcile_Collection_NewDocs_base500_new250(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 250)
+}
+func Benchmark_Reconcile_Collection_NewDocs_base500_new500(b *testing.B) {
+	runReconcileCollectionNewDocs(b, 500, 500)
+}

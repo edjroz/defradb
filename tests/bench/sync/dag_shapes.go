@@ -65,6 +65,20 @@ func seedDocs(ctx context.Context, tb testing.TB, col client.Collection, docCoun
 	return ids
 }
 
+// seedNamedDocs creates count fresh documents whose names carry the given prefix, so
+// their docIDs (content-derived) are distinct from any other batch. Returns the docID
+// strings. This models an "added items" divergence — brand-new documents the peer
+// lacks — as opposed to applyTail's updates to existing documents.
+func seedNamedDocs(ctx context.Context, tb testing.TB, col client.Collection, prefix string, count int) []string {
+	tb.Helper()
+	ids := make([]string, 0, count)
+	for d := 0; d < count; d++ {
+		doc := createDoc(ctx, tb, col, fmt.Sprintf("%s-%d", prefix, d))
+		ids = append(ids, doc.ID().String())
+	}
+	return ids
+}
+
 // applyTail extends the DAGs of the given documents by `extra` further commits
 // each, creating an incremental divergence of known size on top of a shared base.
 func applyTail(ctx context.Context, tb testing.TB, col client.Collection, docIDs []string, extra int) {
