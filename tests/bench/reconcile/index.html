@@ -20,8 +20,7 @@ that regime, costs more outside it, and is <b>default-off</b>.</p>
 coordination bytes</b> — the cost of <em>discovering</em> what differs, <b>not</b> the
 data transferred (payload is identical either way). (2) <b>Group&nbsp;A is modelled</b>
 (a directional sweep); <b>Groups&nbsp;B–F are measured on real nodes</b>. Where a model
-and a measurement disagree, the measurement wins. See
-<code>tests/bench/reconcile/README.md</code> for methodology.</p>
+and a measurement disagree, the measurement wins.</p>
 <section><h2>A · Modelled asymptotic sweep</h2><p class="gdesc">Synthetic sweep of the real Phase-2 negentropy engine against an idealized full-identifier baseline — the asymptotic shape at sizes too large to run end-to-end. Directional, not wall-clock; the baseline is deliberately generous, so these <em>understate</em> the real win.</p>
 <figure><img src="plots/01_bytes_vs_n.svg" alt="01_bytes_vs_n.svg"/><figcaption><b>x</b> = set size n (diff fixed at 2); <b>y</b> = control bytes, log-log. Default climbs with the set, negentropy with its logarithm — 188× fewer at n=100k.</figcaption></figure>
 <figure><img src="plots/02_reduction_vs_n.svg" alt="02_reduction_vs_n.svg"/><figcaption><b>x</b> = set size n; <b>y</b> = default ÷ negentropy. Chart 1 as a ratio: the saving compounds with set size — the larger the shared set, the bigger the win.</figcaption></figure>

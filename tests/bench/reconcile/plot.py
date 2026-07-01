@@ -704,8 +704,7 @@ that regime, costs more outside it, and is <b>default-off</b>.</p>
 coordination bytes</b> — the cost of <em>discovering</em> what differs, <b>not</b> the
 data transferred (payload is identical either way). (2) <b>Group&nbsp;A is modelled</b>
 (a directional sweep); <b>Groups&nbsp;B–F are measured on real nodes</b>. Where a model
-and a measurement disagree, the measurement wins. See
-<code>tests/bench/reconcile/README.md</code> for methodology.</p>
+and a measurement disagree, the measurement wins.</p>
 {body}
 </body></html>"""
     with open(os.path.join(HERE, "index.html"), "w") as f:
