@@ -145,8 +145,9 @@ uses the manual API's **bidirectional push**. Pushing a *large cold* set (e.g. a
 (pull) succeeds at the same size — the in-process benchmarks in `tests/bench/sync`
 (which reconcile pull-side) handle 200+ docs fine and are the **authoritative
 multi-size measurement**. So this tool reliably measures the steady-state win at
-the `pair` / tiny-diff scale (validated on real hardware), while the in-process
-crossover curve (`tests/bench/reconcile` chart 9) supplies the size sweep. Driving
+the tiny-diff scale (validated across 2/5/10 dockerised containers on one host —
+`docker/multinode-run.sh`), while the in-process crossover curve
+(`tests/bench/reconcile` chart 9) supplies the size sweep. Driving
 reconciliation from the node that is *behind* (pull) to make the cross-device
 size-sweep robust is a follow-up.
 

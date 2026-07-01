@@ -1,3 +1,7 @@
-approach,docs,net_ctrl_bytes,net_ctrl_msgs,converged
-default_sync,50,17984,6,True
-reconcile,50,8588,10,True
+approach,nodes,net_ctrl_bytes,net_ctrl_msgs,converged,state_match
+reconcile,2,10008,14,True,True
+default_sync,2,17984,6,True,True
+reconcile,5,40032,56,True,True
+default_sync,5,148190,45,True,True
+reconcile,10,90072,126,True,True
+default_sync,10,1283120,384,True,True

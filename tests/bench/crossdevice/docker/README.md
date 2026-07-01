@@ -72,9 +72,20 @@ In a second terminal, while a run is in flight:
 - p2p `9300`: **not** published — containers reach each other over the bridge.
 
 ## Extending to N nodes
-Copy a `nodeN` service block in `docker-compose.yml` (publish `1770(N+1):17700`, add a
-`nodeN-data` volume), add its endpoint to the `--devices node:...` list, and pick a topology
-that uses `--nodes` (e.g. `--topology line --nodes 3`).
+Use `multinode-run.sh`, which generates an N-node stack (`gen-compose.py`), builds the
+image, and runs both modes for a topology that uses `--nodes`:
+
+```sh
+./multinode-run.sh 2            # pair,  docs50, star
+./multinode-run.sh 5 50 star    # 5 nodes
+./multinode-run.sh 10 50 star   # 10 nodes
+```
+
+Each writes `../results/docker-<topo>-n<N>-tiny-diff-docs<docs>-<mode>.csv` plus a
+combined per-N CSV. The 2/5/10-node `star` sweep behind chart 11 of the approval packet
+(`tests/bench/reconcile`) is produced this way. To wire a stack by hand instead,
+`python3 gen-compose.py N > docker-compose.N.yml` and drive `run.py` with a
+`--devices node:127.0.0.1:17701,...,1770N` list.
 
 ## Simulating a weaker device
 Add a resource cap to a service to exercise the Phase 5 criterion-3 concern (does the

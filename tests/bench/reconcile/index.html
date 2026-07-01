@@ -34,11 +34,13 @@ docs). Reconciliation still wins at <b>half the collection changed</b> (250/500)
 the crossover where a large diff makes it lose is beyond that &mdash; the measured
 analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
 always-on ordered-index write adds only a small per-commit overhead.
-<b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
-LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
-collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
-default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
-devices. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
+<b>Chart&nbsp;11</b> takes it off the in-process bench and onto <b>real Docker
+containers on one host bridge</b> (2, 5, 10 benchnodes in a star; node0 diverges one
+doc in a 50-doc collection). As the network grows, reconciliation's total control
+bytes scale ~linearly with the star's edges while default broadcast grows
+super-linearly, so the reduction <b>compounds</b>: <b>1.8&times;</b> at 2 nodes,
+<b>3.7&times;</b> at 5, <b>14&times;</b> at 10 (90KB vs 1.28MB). Every run converged
+with identical document state on all nodes. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
 case: a 10-doc two-sided fork with branches <b>3 vs 50 commits deep</b>. The control
 cost is <b>unchanged by depth</b> (chart&nbsp;13) &mdash; a deep branch is still a
 single differing head &mdash; while only the payload (blocks fetched + merged) scales

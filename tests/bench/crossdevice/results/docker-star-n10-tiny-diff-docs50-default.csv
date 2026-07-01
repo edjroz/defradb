@@ -1,0 +1,11 @@
+topology,N,scenario,mode,nodeID,ctrlBytesSent,ctrlBytesRecv,ctrlMsgs,blocks,blockBytes,wallMs,rounds,converged,stateMatch
+star,10,tiny-diff,default,0,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,1,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,2,90879,38297,40,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,3,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,4,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,5,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,6,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,7,90116,37980,38,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,8,90433,38743,40,307,65818,5118.8,2,True,True
+star,10,tiny-diff,default,9,90116,37980,38,307,65818,5118.8,2,True,True

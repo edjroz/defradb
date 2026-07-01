@@ -408,29 +408,42 @@ def main():
             ],
             ylog=False, yfmt=lambda v: f"{v:.0f}ms"))
 
-    # 11. Cross-device, real hardware: the tiny-diff win measured end-to-end between
-    # two physical Macs (Mac mini <-> MacBook) over a LAN. Network total to converge
-    # one changed doc in a 50-doc collection — the same contrast as chart 9, now off
-    # the bench. (tests/bench/crossdevice/)
+    # 11. Cross-container validation, real Docker containers on one host bridge: the
+    # tiny-diff win as the NETWORK grows. N benchnode containers in a star (node0 is
+    # the diverging source), converging one changed doc in a 50-doc collection. Total
+    # network control bytes (summed over all nodes): reconciliation scales ~linearly
+    # with the star's edges while default broadcast grows super-linearly (every node
+    # re-lists all docIDs), so the reduction factor COMPOUNDS with node count. Log-y.
+    # (tests/bench/crossdevice/docker/)
     xd_path = os.path.join(HERE, "data", "measured_crossdevice.csv")
     if os.path.exists(xd_path):
         with open(xd_path, newline="") as f:
-            xd = {r["approach"]: r for r in csv.DictReader(f)}
+            xdrows = list(csv.DictReader(f))
 
-        def xdv(approach):
-            return float(xd[approach]["net_ctrl_bytes"]) if approach in xd else 0.0
+        def xdseries(approach):
+            pts = [(float(r["nodes"]), float(r["net_ctrl_bytes"])) for r in xdrows
+                   if r["approach"] == approach]
+            return sorted(pts)
 
-        written.append(bar_chart(
+        dflt = xdseries("default_sync")
+        recon = xdseries("reconcile")
+        # reduction annotation at the largest node count
+        red = dflt[-1][1] / recon[-1][1] if recon and dflt else 0
+        written.append(line_chart(
             "11_crossdevice_validation.svg",
-            "Cross-device validation — real Mac mini ↔ MacBook over LAN",
-            "Network total control bytes to converge one changed doc (50-doc collection). "
-            "The in-process win reproduces end-to-end across two physical machines.",
-            "network control bytes (both nodes)",
+            "Cross-container validation — Docker containers on one host bridge",
+            "N benchnode containers (star; node0 diverges one doc in a 50-doc collection). "
+            "Total network control bytes to converge, vs node count. Log-y.",
+            "nodes  (containers)",
+            "network control bytes (all nodes, log scale)",
             [
-                ("default doc-sync", xdv("default_sync"), BASELINE_COLOR),
-                ("reconcile (M2)", xdv("reconcile"), NG_COLOR),
+                {"label": "default doc-sync", "color": BASELINE_COLOR, "points": dflt,
+                 "notes": [(d[0], d[1], fmt_bytes(d[1])) for d in dflt]},
+                {"label": "reconcile (ranges)", "color": NG_COLOR, "points": recon,
+                 "notes": [(recon[-1][0], recon[-1][1], f"{fmt_bytes(recon[-1][1])}  ({red:.0f}x fewer)")]
+                          if recon else []},
             ],
-            ylog=False, yfmt=fmt_bytes))
+            xlog=False, ylog=True, xfmt=lambda v: f"{v:.0f}", yfmt=fmt_bytes))
 
     # 12. The other axis (real nodes): control bytes vs DIFFERENCE size at a fixed
     # collection (500 docs). Reconciliation is O(diff · log n) — it rises with the
@@ -552,11 +565,13 @@ docs). Reconciliation still wins at <b>half the collection changed</b> (250/500)
 the crossover where a large diff makes it lose is beyond that &mdash; the measured
 analogue of the modelled chart&nbsp;3. <b>Chart&nbsp;10</b> is the cost side: the
 always-on ordered-index write adds only a small per-commit overhead.
-<b>Chart&nbsp;11</b> takes it off the bench and onto <b>two physical Macs over a
-LAN</b> (Mac mini &harr; MacBook): converging one changed doc in a 50-doc
-collection, reconciliation moves <b>~2&times; fewer</b> network control bytes than
-default (8.6KB vs 18KB) &mdash; the same win, validated end-to-end across real
-devices. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
+<b>Chart&nbsp;11</b> takes it off the in-process bench and onto <b>real Docker
+containers on one host bridge</b> (2, 5, 10 benchnodes in a star; node0 diverges one
+doc in a 50-doc collection). As the network grows, reconciliation's total control
+bytes scale ~linearly with the star's edges while default broadcast grows
+super-linearly, so the reduction <b>compounds</b>: <b>1.8&times;</b> at 2 nodes,
+<b>3.7&times;</b> at 5, <b>14&times;</b> at 10 (90KB vs 1.28MB). Every run converged
+with identical document state on all nodes. <b>Charts&nbsp;13&nbsp;&amp;&nbsp;14</b> isolate the long-differing-branch
 case: a 10-doc two-sided fork with branches <b>3 vs 50 commits deep</b>. The control
 cost is <b>unchanged by depth</b> (chart&nbsp;13) &mdash; a deep branch is still a
 single differing head &mdash; while only the payload (blocks fetched + merged) scales

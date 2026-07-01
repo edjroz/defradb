@@ -49,18 +49,29 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
 
 ## Cross-device validation
 
-The measurements above run both nodes on one machine. `tests/bench/crossdevice/`
+The measurements above run both nodes in one process. `tests/bench/crossdevice/`
 runs the same default-vs-ranges contrast across an **N-node network with
-configurable topologies** on separate processes/devices, using an instrumented
-bench-node that reports the same control-byte metric. Measured on **two physical Macs**
-(Mac mini ↔ MacBook over a LAN, `pair`/`tiny-diff`/docs50): reconciliation moves
-**8,588 vs 17,984 network control bytes — 2.09× fewer** — and both nodes converge
-to an identical block set (chart 11, `data/measured_crossdevice.csv`). Arbitrary
-topologies also converge correctly (`line`/`multi-writer`, multi-hop). See that
-directory's README — including the honest notes that its `ranges` control bytes
-include bidirectional-push tips (the in-process numbers here remain the cleanest
-control-byte measurement) and that the multi-size cross-device sweep is bounded by a
-push-at-scale limitation, so the in-process benchmarks supply the size curve.
+configurable topologies**, using an instrumented bench-node that reports the same
+control-byte metric. Measured here on **N real Docker containers on one host bridge**
+(`tests/bench/crossdevice/docker/`, `star`/`tiny-diff`/docs50, one diverged doc on the
+hub), swept over node count:
+
+| nodes | reconcile | default | reduction |
+|---|---|---|---|
+| 2 | 10,008 B | 17,984 B | **1.8×** |
+| 5 | 40,032 B | 148,190 B | **3.7×** |
+| 10 | 90,072 B | 1,283,120 B | **14×** |
+
+Reconciliation scales ~linearly with the star's edges (≈10 KB/edge) while default
+broadcast grows super-linearly (every node re-lists all docIDs), so the reduction
+**compounds** with network size. Every run converged with an **identical document set
+on all nodes** (`stateMatch`), not just an equal block count (chart 11,
+`data/measured_crossdevice.csv`). Arbitrary topologies also converge correctly
+(`line`/`multi-writer`, multi-hop). This is a single-host container network — a
+true weaker-second-device run (the Phase 5 ARM gate) is still separately required;
+see that directory's README, including the honest note that the manual API's `ranges`
+control bytes include bidirectional-push tips, so the in-process benchmarks remain the
+cleanest per-node control-byte measurement.
 
 ## Honest caveats
 
