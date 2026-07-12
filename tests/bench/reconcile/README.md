@@ -32,15 +32,25 @@ why this comparison reports *protocol* bytes rather than raw socket bytes.
 ## Reproduce
 
 ```sh
+# one command: regenerate the dataset + render the SVGs + index.html
+make test:bench-reconcile-report
+
+# then view
+open tests/bench/reconcile/index.html
+```
+
+Or run the two steps by hand:
+
+```sh
 # 1. regenerate the dataset (drives the real engine; gated, ~0.3s)
 DEFRA_RECONCILE_REPORT=1 go test ./tests/bench/reconcile/ -run TestGenerateComparisonData -v
 
 # 2. render the SVG charts + index.html (pure stdlib, no matplotlib)
 python3 tests/bench/reconcile/plot.py
-
-# 3. view
-open tests/bench/reconcile/index.html
 ```
+
+The `make` target regenerates only the modelled `data/comparison.csv`; the
+`measured_*.csv` inputs (including the crossdevice sweep) stay committed.
 
 Without `DEFRA_RECONCILE_REPORT` the test skips, keeping the default lane fast.
 
@@ -49,8 +59,7 @@ Without `DEFRA_RECONCILE_REPORT` the test skips, keeping the default lane fast.
 - `comparison_test.go` — the gated data generator (engine driver + baseline model).
 - `plot.py` — dependency-free SVG chart renderer (stdlib only).
 - `data/comparison.csv` — generated synthetic dataset (modelled baseline vs measured engine).
-- `data/measured_m1.csv` — measured Phase-3/M1 numbers from `tests/bench/sync` (real nodes).
-- `plots/0[1-4]_*.svg` — synthetic sweep charts; `plots/0[56]_*.svg` — measured M1 charts.
+- `plots/0[1-4]_*.svg` — synthetic sweep charts; `plots/07_*`–`plots/15_*` — measured charts.
 - `index.html` embeds them all with a narrative.
 
 ## Results
@@ -110,10 +119,9 @@ the reason the headline asymptotic win is **explicitly an M2 deliverable**:
 
 - M2 reconciles a **whole collection's block-CID set in one session**, so the 42
   messages collapse toward a single logarithmic session over a large set — the regime
-  the synthetic sweep above models (small diff, large `n`).
-- The plots `plots/05_measured_control_bytes.svg` and `plots/06_measured_round_trips.svg`
-  show this measured M1 overhead; the modelled sweep shows where the curve goes once
-  the set is large and batched.
+  the synthetic sweep above models (small diff, large `n`). The measured M2 collapse
+  of this M1 overhead is charts 07–08; the modelled sweep shows where the curve goes
+  once the set is large and batched.
 
 The benchmark's value at M1 is therefore (1) validating the real path end-to-end
 (convergence, payload ∝ diff) and (2) quantifying the per-session overhead that M2

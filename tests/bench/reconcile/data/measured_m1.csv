@@ -1,4 +1,0 @@
-scenario,approach,docs,ctrl_bytes,ctrl_msgs,blocks,block_bytes,sync_ms
-manyhead_docs10_base5_k3,default_sync,10,429,1,60,14910,1245
-manyhead_docs10_base5_k3,reconcile,10,18970,42,60,14910,1945
-singledoc_base5_k3,reconcile,1,2869,6,6,1491,200

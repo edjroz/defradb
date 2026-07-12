@@ -24,7 +24,6 @@ import os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, "data", "comparison.csv")
-MEASURED = os.path.join(HERE, "data", "measured_m1.csv")
 PLOTS = os.path.join(HERE, "plots")
 
 BASELINE_COLOR = "#d1495b"  # default full-set exchange
@@ -231,13 +230,6 @@ def bar_chart(filename, title, subtitle, ylabel, bars, ylog, yfmt):
     return filename
 
 
-def load_measured():
-    if not os.path.exists(MEASURED):
-        return None
-    with open(MEASURED, newline="") as f:
-        return list(csv.DictReader(f))
-
-
 def main():
     os.makedirs(PLOTS, exist_ok=True)
     rows = load()
@@ -312,41 +304,6 @@ def main():
             {"label": "negentropy", "color": NG_COLOR, "points": ngr},
         ],
         xlog=True, ylog=False, xfmt=fmt_int, yfmt=lambda v: f"{v:.0f}", y_int=True))
-
-    # 5/6. Measured Phase-3 (M1) real-node control cost: default doc-sync vs
-    # per-document reconciliation, same post-partition divergence.
-    measured = load_measured()
-    if measured:
-        def m(scenario, approach, key):
-            for r in measured:
-                if r["scenario"] == scenario and r["approach"] == approach:
-                    return float(r[key])
-            return 0.0
-
-        sc = "manyhead_docs10_base5_k3"
-        written.append(bar_chart(
-            "05_measured_control_bytes.svg",
-            "Measured control bytes — 10-doc post-partition (M1, real nodes)",
-            "Same payload transferred either way; reconciliation's overhead dominates at per-document scale. Log scale.",
-            "control bytes (log scale)",
-            [
-                ("default doc-sync\n(1 broadcast)", m(sc, "default_sync", "ctrl_bytes"), BASELINE_COLOR),
-                ("reconcile\n(10 sessions)", m(sc, "reconcile", "ctrl_bytes"), NG_COLOR),
-                ("reconcile\n1 doc", m("singledoc_base5_k3", "reconcile", "ctrl_bytes"), NG_COLOR),
-            ],
-            ylog=True, yfmt=fmt_bytes))
-
-        written.append(bar_chart(
-            "06_measured_round_trips.svg",
-            "Measured round-trips — 10-doc post-partition (M1, real nodes)",
-            "M1 runs one reconciliation session per document; per-collection batching (M2) collapses this.",
-            "control messages (round-trip proxy)",
-            [
-                ("default doc-sync", m(sc, "default_sync", "ctrl_msgs"), BASELINE_COLOR),
-                ("reconcile\n(10 sessions)", m(sc, "reconcile", "ctrl_msgs"), NG_COLOR),
-                ("reconcile\n1 doc", m("singledoc_base5_k3", "reconcile", "ctrl_msgs"), NG_COLOR),
-            ],
-            ylog=False, yfmt=lambda v: f"{v:.0f}"))
 
     # 7/8. M2 collection-scope collapse: default doc-sync vs M1 per-document vs M2
     # per-collection, all converging the same 10-doc set on real nodes.

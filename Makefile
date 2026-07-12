@@ -370,6 +370,15 @@ test\:bench-sync-save:
 		2> tests/bench/sync/baselines/$(DEVICE).stderr.log | tee tests/bench/sync/baselines/$(DEVICE).txt
 	@rm -f /tmp/defra-sync.test
 
+# Regenerate the reconciliation evidence page (tests/bench/reconcile/index.html):
+# drive the engine to rebuild data/comparison.csv, then render the SVGs + index.html.
+# The measured_*.csv inputs (incl. crossdevice) stay committed — this only regenerates
+# the modelled dataset and re-renders. plot.py is pure stdlib (no matplotlib).
+.PHONY: test\:bench-reconcile-report
+test\:bench-reconcile-report:
+	DEFRA_RECONCILE_REPORT=1 go test ./tests/bench/reconcile/ -run TestGenerateComparisonData -v
+	python3 tests/bench/reconcile/plot.py
+
 .PHONY: test\:scripts
 test\:scripts:
 	@$(MAKE) -C ./tools/scripts/ test

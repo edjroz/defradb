@@ -17,7 +17,7 @@ All charts referenced below are in [`index.html`](index.html) (regenerate with
 | # | What | Result | Source |
 |---|---|---|---|
 | 1 | **Asymptotic potential** (modelled sweep) | **188× fewer control bytes** to find a 2-item difference at n=100k | charts 1–4, `data/comparison.csv` (Phase-2 engine, measured) vs modelled full-set baseline |
-| 2 | **Per-document overhead** (M1, real nodes) | reconciliation costs **~44×** the control bytes of broadcast doc-sync at per-document scale (one session per doc); **identical payload** | charts 5–6, `data/measured_m1.csv` |
+| 2 | **Per-document overhead** (M1, real nodes) | reconciliation costs **~44×** the control bytes of broadcast doc-sync at per-document scale (one session per doc); **identical payload** | README §"Measured — Phase 3 / M1" table (429 vs 18,970 B) |
 | 3 | **Per-collection collapse** (M2, real nodes) | one collection session brings that back to **~broadcast levels** (2172 vs 1509 B at 10 docs; 4 round-trips, not 42) | charts 7–8, `data/measured_m2.csv` |
 | 4a | **Payoff vs collection size** (real nodes) | one changed doc, collection 50→1000: default control is linear (**2.1→42KB**, ~42 B/doc) while reconciliation is logarithmic (**2.7→6.4KB**) — a **6.5× gap at 1000 docs** | chart 9, `data/measured_m5.csv` |
 | 4b | **Payoff vs difference size** (real nodes) | collection fixed at 500, diff 1→500: default is **flat at 21KB** (`O(n)`, lists every docID) while reconciliation rises **linearly** (**5.3→23.2KB**; at fixed n, `O(diff·log n)`=`O(diff)`) and **crosses above default at ~diff 395 (~79% of the collection)** — the measured trade-off *and* its crossover | chart 12, `data/measured_diffsweep.csv` |
@@ -77,7 +77,7 @@ cleanest per-node control-byte measurement.
 
 - **Charts 1–4 are modelled**, not measured end-to-end: the negentropy side is the
   real Phase-2 engine, but the default-sync baseline is a *generous* full-identifier
-  exchange (a lower bound on the real DAG-walk cost). Charts 5–10 are measured on
+  exchange (a lower bound on the real DAG-walk cost). Charts 7–15 are measured on
   real nodes.
 - **Single device tier (M4 Pro) here.** The gate requires a second, weaker
   Apple-Silicon device before final sign-off; x86_64 is out of scope (deferred to
