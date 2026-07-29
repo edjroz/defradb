@@ -16,6 +16,7 @@ import (
 
 	"github.com/ipfs/go-cid"
 
+	"github.com/sourcenetwork/corekv"
 	"github.com/sourcenetwork/immutable"
 
 	"github.com/sourcenetwork/defradb/client"
@@ -270,6 +271,14 @@ func (db *DB) buildViewCache(ctx context.Context, col client.CollectionVersion) 
 
 	ds := datastore.NewMultistore(db.rootstore, db.lockSet, db.blockStoreChunkSize).Datastore()
 
+	// Multistore(rootstore) still routes writes into a corekv txn present on the
+	// context (corekv/badger.Datastore.Set). Detach it so each view-cache put
+	// auto-commits and does not hit the store ~11 MB transaction limit.
+	// The Defra lock txn remains for CollectionRLock.
+	// https://github.com/sourcenetwork/corekv/issues/107
+	// https://github.com/sourcenetwork/defradb/issues/4386
+	writeCtx := corekv.SetCtxTxn(ctx, nil)
+
 	// View items are currently keyed by their index, starting at 1.
 	// The order in which results are returned must be consistent with the results of the
 	// underlying query/transform.
@@ -288,7 +297,7 @@ func (db *DB) buildViewCache(ctx context.Context, col client.CollectionVersion) 
 		}
 
 		itemKey := keys.NewViewCacheKey(collectionShortID, itemID)
-		err = ds.Set(ctx, itemKey, serializedItem)
+		err = ds.Set(writeCtx, itemKey, serializedItem)
 		if err != nil {
 			return NewErrStoreViewCacheItem(err)
 		}
