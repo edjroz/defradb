@@ -33,11 +33,11 @@ import (
 //
 //	BuildRequestAST   lex + parse the request string into an ast.Document
 //	ValidateDocument  gql.ValidateDocument(schema, ast, nil)
-//	Parse             ValidateDocument + lowering into a request.Request
+//	ValidateAndLower  ValidateDocument + lowering into a request.Request
 //
-// Parse is a superset of ValidateDocument, so:
+// ValidateAndLower is a superset of ValidateDocument, so:
 //
-//	validation share = ValidateDocument / (BuildRequestAST + Parse)
+//	validation share = ValidateDocument / (BuildRequestAST + ValidateAndLower)
 //
 // A cache would have to be keyed on more than the request string. Parse
 // re-resolves the schema per transaction (parser.go looks up a per-txn schema
@@ -212,10 +212,16 @@ func Benchmark_Planner_UserSimple_ValidateDocument(b *testing.B) {
 	})
 }
 
-// Benchmark_Planner_UserSimple_Parse measures validation plus lowering the AST
-// into a request.Request - everything (*parser).Parse does after the AST
-// exists. The difference against ValidateDocument is the lowering cost.
-func Benchmark_Planner_UserSimple_Parse(b *testing.B) {
+// Benchmark_Planner_UserSimple_ValidateAndLower measures validation plus
+// lowering the AST into a request.Request - everything (*parser).Parse does
+// after the AST exists. The difference against ValidateDocument is the lowering
+// cost.
+//
+// This stage is the second half of what the pre-existing
+// [Benchmark_Planner_UserSimple_ParseQuery] times end to end: that benchmark
+// runs BuildRequestAST plus this stage over a single fixed request, so it
+// reports a combined number that cannot be attributed to either stage.
+func Benchmark_Planner_UserSimple_ValidateAndLower(b *testing.B) {
 	benchmarkParseStages(b, func(b *testing.B, h parseHarness, query string) {
 		astDoc, err := h.parser.BuildRequestAST(h.ctx, query)
 		if err != nil {

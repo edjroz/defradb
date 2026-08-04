@@ -113,7 +113,7 @@ type syncSpans struct {
 func Benchmark_P2P_Replicate_Push(b *testing.B) {
 	for _, docCount := range pushDocCounts {
 		b.Run(fmt.Sprintf("docs=%d", docCount), func(b *testing.B) {
-			runReplicationBench(b, docCount, pushActions)
+			runReplicationBench(b, docCount, pushActions, true)
 		})
 	}
 }
@@ -131,10 +131,14 @@ func Benchmark_P2P_Replicate_Push(b *testing.B) {
 // benchmark is expected to be dominated by that deadline rather than by the cost of
 // moving the documents. The `docs-synced` metric reports how many documents actually
 // arrived within it.
+//
+// For the same reason no throughput metric is reported here: with the measured duration
+// pinned to the deadline, a documents-per-second figure would be `docs / 5s` by
+// construction and would say nothing about how fast the pull path can move documents.
 func Benchmark_P2P_Sync_Pull(b *testing.B) {
 	for _, docCount := range pullDocCounts {
 		b.Run(fmt.Sprintf("docs=%d", docCount), func(b *testing.B) {
-			runReplicationBench(b, docCount, pullActions)
+			runReplicationBench(b, docCount, pullActions, false)
 		})
 	}
 }
@@ -146,7 +150,11 @@ func Benchmark_P2P_Sync_Pull(b *testing.B) {
 // recording the spans into the supplied [syncSpans].
 type actionBuilder func(b *testing.B, docCount int, spans *syncSpans) []any
 
-func runReplicationBench(b *testing.B, docCount int, build actionBuilder) {
+// runReplicationBench runs build's test case b.N times and reports the averaged spans.
+//
+// reportThroughput controls whether a documents-per-second metric is reported; it is only
+// meaningful where the measured duration reflects the cost of moving the documents.
+func runReplicationBench(b *testing.B, docCount int, build actionBuilder, reportThroughput bool) {
 	var (
 		totalReplicated time.Duration
 		totalVisible    time.Duration
@@ -169,7 +177,13 @@ func runReplicationBench(b *testing.B, docCount int, build actionBuilder) {
 			// client only - running the same case through the HTTP and CLI clients would
 			// fold transport cost into the reported numbers.
 			SupportedClientTypes: immutable.Some([]state.ClientType{state.GoClientType}),
-			Actions:              build(b, docCount, &spans),
+			// Restricting the database type likewise pins the benchmark to a single
+			// store. Without it, setting any of the `DEFRA_*` store environment
+			// variables would make ExecuteTestCase run the case once per store within
+			// a single timed iteration, summing their cost into `ns/op` while each
+			// run overwrote the spans recorded by the last.
+			SupportedDatabaseTypes: immutable.Some([]state.DatabaseType{testUtils.BadgerIMType}),
+			Actions:                build(b, docCount, &spans),
 		})
 
 		totalReplicated += spans.replicated
@@ -178,7 +192,7 @@ func runReplicationBench(b *testing.B, docCount int, build actionBuilder) {
 		totalDocs += spans.observedDocs
 	}
 
-	reportSyncMetrics(b, totalReplicated, totalVisible, totalLocalWrite, totalDocs)
+	reportSyncMetrics(b, totalReplicated, totalVisible, totalLocalWrite, totalDocs, reportThroughput)
 }
 
 // pushActions builds a test case in which a replicator pushes documents from node 0 to
@@ -345,6 +359,7 @@ func reportSyncMetrics(
 	totalVisible time.Duration,
 	totalLocalWrite time.Duration,
 	totalDocs int,
+	reportThroughput bool,
 ) {
 	if b.N == 0 {
 		return
@@ -359,7 +374,7 @@ func reportSyncMetrics(
 	b.ReportMetric(totalLocalWrite.Seconds()/iterations*1e3, "ms/local-write")
 	b.ReportMetric(docs, "docs-synced")
 
-	if replicatedSeconds > 0 {
+	if reportThroughput && replicatedSeconds > 0 {
 		b.ReportMetric(docs/replicatedSeconds, "docs/s")
 	}
 }

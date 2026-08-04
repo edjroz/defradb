@@ -221,6 +221,11 @@ func Benchmark_AddDelta_Field(b *testing.B) {
 
 // Benchmark_ProcessBlock measures the state-update half of the write pipeline in isolation:
 // the CRDT merge plus the head update, without block encoding or blockstore writes.
+//
+// The delta priority is advanced on every iteration. [crdt.LWW] returns early from a merge
+// whose priority does not exceed the stored one, so re-merging a fixed-priority delta would
+// perform the register write on the first iteration only and measure a pair of reads
+// thereafter - which would make the value-size axis vary nothing but a `Get`.
 func Benchmark_ProcessBlock(b *testing.B) {
 	for _, valueSize := range benchValueSizes {
 		b.Run(fmt.Sprintf("value=%s", benchValueLabels[valueSize]), func(b *testing.B) {
@@ -236,13 +241,16 @@ func Benchmark_ProcessBlock(b *testing.B) {
 				benchFieldNames[0],
 			)
 
-			block := New(crdt.NewCRDT(&crdt.LWWDelta{
+			delta := &crdt.LWWDelta{
 				FieldName:           benchFieldNames[0],
-				Priority:            1,
 				CollectionVersionID: benchCollectionVersionID,
 				Data:                value,
-			}), nil)
+			}
+			block := New(crdt.NewCRDT(delta), nil)
 
+			// The link is generated once and reused. Regenerating it per iteration would
+			// fold block encoding and hashing back into the timed span; it is only used
+			// here to identify the block in the headstore.
 			link, err := block.GenerateLink()
 			if err != nil {
 				b.Fatal(err)
@@ -251,6 +259,7 @@ func Benchmark_ProcessBlock(b *testing.B) {
 			b.ResetTimer()
 
 			for i := 0; i < b.N; i++ {
+				delta.Priority = uint64(i) + 1
 				if err := ProcessBlock(ctx, lww, block, link); err != nil {
 					b.Fatal(err)
 				}

@@ -18,7 +18,6 @@ import (
 	ipld "github.com/ipld/go-ipld-prime"
 	"github.com/ipld/go-ipld-prime/codec/dagcbor"
 	cidlink "github.com/ipld/go-ipld-prime/linking/cid"
-	"github.com/ipld/go-ipld-prime/node/bindnode"
 
 	"github.com/sourcenetwork/defradb/internal/core/crdt"
 )
@@ -142,23 +141,6 @@ func Benchmark_Block_Unmarshal_LWW(b *testing.B) {
 	})
 }
 
-func Benchmark_Block_GetFromBytes_LWW(b *testing.B) {
-	forEachBlockShape(b, func(b *testing.B, block *Block) {
-		b.StopTimer()
-		encoded, err := block.Marshal()
-		if err != nil {
-			b.Fatal(err)
-		}
-		b.StartTimer()
-
-		for i := 0; i < b.N; i++ {
-			if _, err := GetFromBytes(encoded); err != nil {
-				b.Fatal(err)
-			}
-		}
-	})
-}
-
 func Benchmark_Block_GenerateNode_LWW(b *testing.B) {
 	forEachBlockShape(b, func(b *testing.B, block *Block) {
 		for i := 0; i < b.N; i++ {
@@ -167,7 +149,11 @@ func Benchmark_Block_GenerateNode_LWW(b *testing.B) {
 	})
 }
 
-func Benchmark_Block_GenerateLink_LWW(b *testing.B) {
+// Benchmark_Block_EncodeAndCID_LWW measures [Block.GenerateLink], which is not a hash
+// benchmark: it wraps the block, serializes the representation to dag-cbor and only then
+// hashes the resulting bytes. The reported cost is therefore encode plus hash, and it is
+// strictly greater than Benchmark_Block_Marshal_LWW for the same shape.
+func Benchmark_Block_EncodeAndCID_LWW(b *testing.B) {
 	forEachBlockShape(b, func(b *testing.B, block *Block) {
 		for i := 0; i < b.N; i++ {
 			if _, err := block.GenerateLink(); err != nil {
@@ -177,8 +163,8 @@ func Benchmark_Block_GenerateLink_LWW(b *testing.B) {
 	})
 }
 
-// The benchmarks below isolate the cost of the schema compatibility check that
-// [bindnode.Wrap] performs on every single call.
+// The two decode benchmarks below are an A/B pair that isolates the cost of the schema
+// compatibility check that [bindnode.Wrap] performs on every single call.
 //
 // `bindnode.Wrap(ptrVal, schemaType)` unconditionally calls the (unexported)
 // `verifyCompatibility`, which allocates a fresh `map[seenEntry]bool` and then
@@ -190,35 +176,13 @@ func Benchmark_Block_GenerateLink_LWW(b *testing.B) {
 // `bindnode.Prototype` and panics if [Block] and the schema disagree. Every subsequent
 // `Wrap` re-derives an answer that cannot have changed.
 //
-// The delta between Benchmark_Bindnode_Wrap_PerCall and Benchmark_Bindnode_Prototype_Reuse
-// is therefore the per-call cost that is removable by caching, and it is paid by every
-// [Block.Marshal], [Block.GenerateNode] and [Block.GenerateLink] - and twice by every
-// [Block.Unmarshal], because `ipld.Unmarshal` calls `bindnode.Prototype` and then
-// `bindnode.Wrap` again to re-bind the result.
-
-// Benchmark_Bindnode_Wrap_PerCall measures the current path: schema validation on every call.
-func Benchmark_Bindnode_Wrap_PerCall(b *testing.B) {
-	forEachBlockShape(b, func(b *testing.B, block *Block) {
-		for i := 0; i < b.N; i++ {
-			_ = bindnode.Wrap(block, BlockSchema).Representation()
-		}
-	})
-}
-
-// Benchmark_Bindnode_Prototype_Reuse measures the same work with the validation hoisted
-// out of the loop, as it already is in [mustSetSchema].
-func Benchmark_Bindnode_Prototype_Reuse(b *testing.B) {
-	forEachBlockShape(b, func(b *testing.B, block *Block) {
-		b.StopTimer()
-		// The validating call, made once - this is what package init already does.
-		proto := bindnode.Prototype(&Block{}, BlockSchema)
-		b.StartTimer()
-
-		for i := 0; i < b.N; i++ {
-			_ = proto.Representation()
-		}
-	})
-}
+// The delta between Benchmark_Block_Decode_WrapPerCall and
+// Benchmark_Block_Decode_PrototypeReuse is the evidence for how much of that is removable:
+// both produce the same [Block] from the same bytes, but only the former pays for schema
+// validation - twice, because `ipld.Unmarshal` calls `bindnode.Prototype` and then
+// `bindnode.Wrap` again to re-bind the result - plus the reflect copy-back between them.
+// The same per-call validation is paid by [Block.Marshal], [Block.GenerateNode] and
+// [Block.GenerateLink].
 
 // Benchmark_Block_Decode_WrapPerCall is the current decode path, via [GetFromBytes].
 //
